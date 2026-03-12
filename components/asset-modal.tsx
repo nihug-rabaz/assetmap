@@ -1,0 +1,221 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { Asset, AssetType, Database } from "@/lib/types";
+import { ASSET_TYPES } from "@/lib/types";
+
+interface AssetModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  asset?: Asset;
+  inventory: Database["inventory"];
+  onSave: (asset: Asset) => void;
+  onDelete: () => void;
+}
+
+export function AssetModal({
+  isOpen,
+  onClose,
+  asset,
+  inventory,
+  onSave,
+  onDelete,
+}: AssetModalProps) {
+  const [name, setName] = useState("");
+  const [type, setType] = useState<AssetType>("STATION");
+  const [sku, setSku] = useState("");
+  const [monSku, setMonSku] = useState("");
+
+  useEffect(() => {
+    if (asset) {
+      setName(asset.name);
+      setType(asset.type);
+      setSku(asset.sku);
+      setMonSku(asset.monSku);
+    } else {
+      setName("");
+      setType("STATION");
+      setSku("");
+      setMonSku("");
+    }
+  }, [asset, isOpen]);
+
+  const { showPcSku, showMonSku, pcLabel, pcOptions, monOptions } = useMemo(() => {
+    let showPc = false;
+    let showMon = false;
+    let label = 'מק"ט';
+    let pcOpts: string[] = [];
+    let monOpts: string[] = [];
+
+    switch (type) {
+      case "STATION":
+        showPc = true;
+        showMon = true;
+        label = 'מק"ט PC';
+        pcOpts = inventory.PC || [];
+        monOpts = inventory.MONITOR || [];
+        break;
+      case "PC":
+        showPc = true;
+        label = 'מק"ט PC';
+        pcOpts = inventory.PC || [];
+        break;
+      case "MONITOR":
+        showMon = true;
+        monOpts = inventory.MONITOR || [];
+        break;
+      case "TV":
+        showMon = true;
+        monOpts = inventory.TV || [];
+        break;
+      case "PRINTER":
+        showPc = true;
+        label = 'מק"ט PRINTER';
+        pcOpts = inventory.PRINTER || [];
+        break;
+      case "UC":
+        showPc = true;
+        label = 'מק"ט UC';
+        pcOpts = inventory.UC || [];
+        break;
+    }
+
+    return {
+      showPcSku: showPc,
+      showMonSku: showMon,
+      pcLabel: label,
+      pcOptions: pcOpts,
+      monOptions: monOpts,
+    };
+  }, [type, inventory]);
+
+  const handleSave = () => {
+    if (!name.trim()) {
+      alert("חובה להזין שם עמדה");
+      return;
+    }
+    onSave({
+      name: name.trim(),
+      type,
+      sku,
+      monSku,
+    });
+    onClose();
+  };
+
+  const handleDelete = () => {
+    if (confirm("למחוק את העמדה?")) {
+      onDelete();
+      onClose();
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[999]"
+        onClick={onClose}
+      />
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card p-6 rounded-3xl z-[1000] w-[330px] border border-[var(--glass-border)] shadow-2xl">
+        <h3 className="text-lg font-bold text-foreground mb-4">הגדרת עמדה</h3>
+
+        <Label className="text-muted-foreground text-sm">שם עמדה / תפקיד</Label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={'לדוגמא: קמב"ץ'}
+          className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
+        />
+
+        <Label className="text-muted-foreground text-sm mt-4 block">סוג ציוד</Label>
+        <Select value={type} onValueChange={(v) => setType(v as AssetType)}>
+          <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-card border-[var(--glass-border)]">
+            {ASSET_TYPES.map((t) => (
+              <SelectItem key={t.value} value={t.value} className="text-foreground">
+                {t.icon} {t.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {showPcSku && (
+          <>
+            <Label className="text-muted-foreground text-sm mt-4 block">{pcLabel}</Label>
+            <Select value={sku} onValueChange={setSku}>
+              <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
+                <SelectValue placeholder="-- ללא --" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-[var(--glass-border)]">
+                <SelectItem value="none" className="text-foreground">-- ללא --</SelectItem>
+                {pcOptions.map((s) => (
+                  <SelectItem key={s} value={s} className="text-foreground">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
+
+        {showMonSku && (
+          <>
+            <Label className="text-muted-foreground text-sm mt-4 block">{'מק"ט מסך'}</Label>
+            <Select value={monSku} onValueChange={setMonSku}>
+              <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
+                <SelectValue placeholder="-- ללא --" />
+              </SelectTrigger>
+              <SelectContent className="bg-card border-[var(--glass-border)]">
+                <SelectItem value="none" className="text-foreground">-- ללא --</SelectItem>
+                {monOptions.map((s) => (
+                  <SelectItem key={s} value={s} className="text-foreground">
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
+
+        {asset && (
+          <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
+            <Button
+              onClick={handleDelete}
+              className="w-full bg-[var(--danger)] text-white font-extrabold hover:bg-[var(--danger)]/90"
+            >
+              {'מחק עמדה 🗑️'}
+            </Button>
+          </div>
+        )}
+
+        <Button
+          onClick={handleSave}
+          className="w-full mt-4 bg-[var(--primary)] text-black font-extrabold hover:bg-[var(--primary)]/90"
+        >
+          שמור עמדה
+        </Button>
+        <Button
+          onClick={onClose}
+          variant="outline"
+          className="w-full mt-2 bg-secondary border-[var(--glass-border)] text-foreground"
+        >
+          ביטול
+        </Button>
+      </div>
+    </>
+  );
+}

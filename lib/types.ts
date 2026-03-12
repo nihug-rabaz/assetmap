@@ -1,0 +1,54 @@
+export type AssetType = 'STATION' | 'PC' | 'MONITOR' | 'PRINTER' | 'TV' | 'UC';
+
+export interface Asset {
+  name: string;
+  type: AssetType;
+  sku: string;
+  monSku: string;
+}
+
+export interface Room {
+  rows: number;
+  cols: number;
+  assets: Record<string, Asset>;
+}
+
+export interface Inventory {
+  PC: string[];
+  MONITOR: string[];
+  TV: string[];
+  PRINTER: string[];
+  UC: string[];
+}
+
+export interface Database {
+  rooms: Record<string, Room>;
+  inventory: Inventory;
+}
+
+export const ROOMS = [
+  'חמ"ל רבצ"ר',
+  'חד"ן רבצ"ר',
+  'מכלול תאים',
+  'מאנ"ח',
+  'תר"ח לטרון',
+  'תר"ח לאומי',
+];
+
+export const ASSET_TYPES: { value: AssetType; label: string; icon: string }[] = [
+  { value: 'STATION', label: 'תחנת עבודה (PC + מסך)', icon: '💻' },
+  { value: 'PC', label: 'PC עצמאי', icon: '🖥️' },
+  { value: 'MONITOR', label: 'מסך עצמאי', icon: '📺' },
+  { value: 'PRINTER', label: 'מדפסת', icon: '🖨️' },
+  { value: 'TV', label: 'טלוויזיה', icon: '📡' },
+  { value: 'UC', label: 'טלפון UC', icon: '📞' },
+];
+
+export const ASSET_ICONS: Record<AssetType, string> = {
+  STATION: '💻',
+  PC: '🖥️',
+  MONITOR: '📺',
+  PRINTER: '🖨️',
+  TV: '📡',
+  UC: '📞',
+};

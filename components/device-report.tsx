@@ -349,7 +349,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                   setSortField("sku");
                 }}
               >
-                SKU {sortField === "sku" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
+                מק&quot;ט {sortField === "sku" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
                 className="cursor-pointer text-right"
@@ -360,7 +360,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                   setSortField("monSku");
                 }}
               >
-                MON SKU {sortField === "monSku" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
+                מק&quot;ט מסך {sortField === "monSku" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
             </TableRow>
           </TableHeader>

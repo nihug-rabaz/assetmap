@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Heebo } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { PwaRegister } from '@/components/pwa-register'
+import { PwaInstallBanner } from '@/components/pwa-install-banner'
 import './globals.css'
 
 const heebo = Heebo({ 
@@ -12,6 +14,8 @@ export const metadata: Metadata = {
   title: 'AssetMap Pro | Grid & Drag',
   description: 'מערכת ניהול נכסים ועמדות עבודה',
   generator: 'v0.app',
+  themeColor: '#00f2ff',
+  manifest: '/manifest.webmanifest',
 }
 
 export const viewport: Viewport = {
@@ -49,6 +53,8 @@ export default function RootLayout({
             </div>
           </footer>
         </div>
+        <PwaRegister />
+        <PwaInstallBanner />
         <Analytics />
       </body>
     </html>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import type { Asset, AssetType, Database } from "@/lib/types";
 import { ASSET_TYPES } from "@/lib/types";
+import { BarcodeScanner } from "@/components/barcode-scanner";
 
 interface AssetModalProps {
   isOpen: boolean;
@@ -35,6 +36,7 @@ export function AssetModal({
   const [type, setType] = useState<AssetType>("STATION");
   const [sku, setSku] = useState("");
   const [monSku, setMonSku] = useState("");
+  const [scanTarget, setScanTarget] = useState<"sku" | "mon" | null>(null);
 
   useEffect(() => {
     if (asset) {
@@ -138,7 +140,7 @@ export function AssetModal({
         className="fixed inset-0 bg-black/85 backdrop-blur-sm z-[999]"
         onClick={onClose}
       />
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card p-6 rounded-3xl z-[1000] w-[330px] border border-[var(--glass-border)] shadow-2xl">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card p-6 rounded-3xl z-[1100] w-[330px] border border-[var(--glass-border)] shadow-2xl">
         <h3 className="text-lg font-bold text-foreground mb-4">הגדרת עמדה</h3>
 
         <Label className="text-muted-foreground text-sm">שם עמדה / תפקיד</Label>
@@ -166,40 +168,72 @@ export function AssetModal({
         {showPcSku && (
           <>
             <Label className="text-muted-foreground text-sm mt-4 block">{pcLabel}</Label>
-            <Select value={sku || undefined} onValueChange={setSku}>
-              <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
-                <SelectValue placeholder={'בחר מק"ט'} />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-[var(--glass-border)]">
-                {pcOptions
-                  .filter((s) => s && s.trim().length > 0)
-                  .map((s) => (
-                    <SelectItem key={s} value={s} className="text-foreground">
-                      {s}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2 mt-2">
+              <Select value={sku || undefined} onValueChange={setSku}>
+                <SelectTrigger className="flex-1 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
+                  <SelectValue placeholder={'בחר מק"ט'} />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-[var(--glass-border)]">
+                  {pcOptions
+                    .filter((s) => s && s.trim().length > 0)
+                    .map((s) => (
+                      <SelectItem key={s} value={s} className="text-foreground">
+                        {s}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                className="px-3 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
+                onClick={() => setScanTarget("sku")}
+              >
+                סריקה
+              </Button>
+            </div>
+            <Input
+              value={sku}
+              onChange={(e) => setSku(e.target.value)}
+              placeholder="סרוק או הקלד מק&quot;ט..."
+              className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground tracking-widest text-center"
+            />
           </>
         )}
 
         {showMonSku && (
           <>
             <Label className="text-muted-foreground text-sm mt-4 block">{'מק"ט מסך'}</Label>
-            <Select value={monSku || undefined} onValueChange={setMonSku}>
-              <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
-                <SelectValue placeholder={'בחר מק"ט מסך'} />
-              </SelectTrigger>
-              <SelectContent className="bg-card border-[var(--glass-border)]">
-                {monOptions
-                  .filter((s) => s && s.trim().length > 0)
-                  .map((s) => (
-                    <SelectItem key={s} value={s} className="text-foreground">
-                      {s}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2 mt-2">
+              <Select value={monSku || undefined} onValueChange={setMonSku}>
+                <SelectTrigger className="flex-1 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
+                  <SelectValue placeholder={'בחר מק"ט מסך'} />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-[var(--glass-border)]">
+                  {monOptions
+                    .filter((s) => s && s.trim().length > 0)
+                    .map((s) => (
+                      <SelectItem key={s} value={s} className="text-foreground">
+                        {s}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Button
+                type="button"
+                variant="outline"
+                className="px-3 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
+                onClick={() => setScanTarget("mon")}
+              >
+                סריקה
+              </Button>
+            </div>
+            <Input
+              value={monSku}
+              onChange={(e) => setMonSku(e.target.value)}
+              placeholder="סרוק או הקלד מק&quot;ט מסך..."
+              className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground tracking-widest text-center"
+            />
           </>
         )}
 
@@ -228,6 +262,19 @@ export function AssetModal({
           ביטול
         </Button>
       </div>
+      {scanTarget && (
+        <BarcodeScanner
+          onResult={(code) => {
+            if (scanTarget === "sku") {
+              setSku(code);
+            } else {
+              setMonSku(code);
+            }
+            setScanTarget(null);
+          }}
+          onClose={() => setScanTarget(null)}
+        />
+      )}
     </>
   );
 }

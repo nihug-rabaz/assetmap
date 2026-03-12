@@ -17,21 +17,24 @@ async function importData() {
 
   console.log("Importing rooms...");
   for (const [roomName, roomData] of Object.entries(data.rooms)) {
-    await sql`
+    const [room] = await sql`
       INSERT INTO rooms (name, rows, cols)
       VALUES (${roomName}, ${roomData.rows || 6}, ${roomData.cols || 8})
+      ON CONFLICT (name) DO UPDATE
+      SET rows = EXCLUDED.rows,
+          cols = EXCLUDED.cols
+      RETURNING id
     `;
+    const roomId = room.id;
     console.log(`  - Imported room: ${roomName}`);
 
-    // Import assets for this room
     for (const [cellId, assetData] of Object.entries(roomData.assets || {})) {
-      // Only include valid cell IDs (format: "row-col")
       if (/^\d+-\d+$/.test(cellId)) {
         const [row, col] = cellId.split("-").map(Number);
         await sql`
-          INSERT INTO assets (room_name, cell_row, cell_col, name, type, sku, mon_sku)
+          INSERT INTO assets (room_id, cell_row, cell_col, name, type, sku, mon_sku)
           VALUES (
-            ${roomName},
+            ${roomId},
             ${row},
             ${col},
             ${assetData.name || ""},
@@ -53,17 +56,17 @@ async function importData() {
   const inventory = data.inventory || {};
 
   for (const sku of inventory.station || []) {
-    await sql`INSERT INTO inventory (type, sku) VALUES ('PC', ${sku})`;
+    await sql`INSERT INTO inventory (category, sku) VALUES ('PC', ${sku})`;
   }
   console.log(`  - Imported ${(inventory.station || []).length} PC items`);
 
   for (const sku of inventory.tv || []) {
-    await sql`INSERT INTO inventory (type, sku) VALUES ('TV', ${sku})`;
+    await sql`INSERT INTO inventory (category, sku) VALUES ('TV', ${sku})`;
   }
   console.log(`  - Imported ${(inventory.tv || []).length} TV items`);
 
   for (const sku of inventory.printer || []) {
-    await sql`INSERT INTO inventory (type, sku) VALUES ('PRINTER', ${sku})`;
+    await sql`INSERT INTO inventory (category, sku) VALUES ('PRINTER', ${sku})`;
   }
   console.log(`  - Imported ${(inventory.printer || []).length} PRINTER items`);
 

@@ -11,6 +11,7 @@ export interface Room {
   rows: number;
   cols: number;
   assets: Record<string, Asset>;
+  entranceCellId?: string | null;
 }
 
 export interface Inventory {
@@ -25,15 +26,6 @@ export interface Database {
   rooms: Record<string, Room>;
   inventory: Inventory;
 }
-
-export const ROOMS = [
-  "חמ'ל רבצ'ר",
-  "חד'ן רבצ'ר",
-  "מכלול תאים",
-  "מאנ'ח",
-  "תר'ח לטרון",
-  "תר'ח לאומי",
-];
 
 export const ASSET_TYPES: { value: AssetType; label: string; icon: string }[] = [
   { value: 'STATION', label: 'תחנת עבודה (PC + מסך)', icon: '💻' },

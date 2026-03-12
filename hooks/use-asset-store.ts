@@ -47,6 +47,7 @@ function transformApiData(apiData: Record<string, unknown>): Database {
       rows: roomData.rows || 6,
       cols: roomData.cols || 8,
       assets,
+      entranceCellId: null,
     };
   }
 
@@ -111,13 +112,27 @@ export function useAssetStore() {
 
   const getRoom = useCallback(
     (roomName: string): Room => {
-      return db.rooms[roomName] || { rows: 6, cols: 8, assets: {} };
+      return db.rooms[roomName] || { rows: 6, cols: 8, assets: {}, entranceCellId: null };
     },
     [db.rooms]
   );
 
   const setRoom = useCallback(
     (roomName: string, room: Room) => {
+      const newDb = {
+        ...db,
+        rooms: { ...db.rooms, [roomName]: room },
+      };
+      setDb(newDb);
+      saveLocal(newDb);
+    },
+    [db, saveLocal]
+  );
+
+  const createRoom = useCallback(
+    (roomName: string, rows = 6, cols = 8) => {
+      const existing = db.rooms[roomName];
+      const room: Room = existing || { rows, cols, assets: {}, entranceCellId: null };
       const newDb = {
         ...db,
         rooms: { ...db.rooms, [roomName]: room },
@@ -176,6 +191,15 @@ export function useAssetStore() {
     [getRoom, setRoom]
   );
 
+  const setRoomEntrance = useCallback(
+    (roomName: string, cellId: string | null) => {
+      const room = getRoom(roomName);
+      const newRoom = { ...room, entranceCellId: cellId };
+      setRoom(roomName, newRoom);
+    },
+    [getRoom, setRoom]
+  );
+
   const setInventory = useCallback(
     (type: keyof Database["inventory"], items: string[]) => {
       const newDb = {
@@ -200,5 +224,7 @@ export function useAssetStore() {
     moveAsset,
     updateRoomDimensions,
     setInventory,
+    createRoom,
+    setRoomEntrance,
   };
 }

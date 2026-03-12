@@ -23,12 +23,16 @@ export async function POST() {
 
     for (const [roomName, roomData] of Object.entries(data.rooms || {})) {
       const room = roomData as { rows: number; cols: number; assets: Record<string, unknown> };
-      
-      await sql`
+
+      const [dbRoom] = await sql<[{ id: number }]>`
         INSERT INTO rooms (name, rows, cols)
         VALUES (${roomName}, ${room.rows || 6}, ${room.cols || 8})
-        ON CONFLICT (name) DO UPDATE SET rows = ${room.rows || 6}, cols = ${room.cols || 8}
+        ON CONFLICT (name) DO UPDATE
+        SET rows = EXCLUDED.rows,
+            cols = EXCLUDED.cols
+        RETURNING id
       `;
+      const roomId = dbRoom.id;
       roomCount++;
 
       for (const [cellId, assetData] of Object.entries(room.assets || {})) {
@@ -37,8 +41,8 @@ export async function POST() {
           const [row, col] = cellId.split("-").map(Number);
 
           await sql`
-            INSERT INTO assets (room_name, cell_row, cell_col, name, type, sku, mon_sku)
-            VALUES (${roomName}, ${row}, ${col}, ${asset.name || ""}, ${asset.type || "STATION"}, ${String(asset.sku || "")}, ${String(asset.monSku || "")})
+            INSERT INTO assets (room_id, cell_row, cell_col, name, type, sku, mon_sku)
+            VALUES (${roomId}, ${row}, ${col}, ${asset.name || ""}, ${asset.type || "STATION"}, ${String(asset.sku || "")}, ${String(asset.monSku || "")})
           `;
           assetCount++;
         }
@@ -50,15 +54,15 @@ export async function POST() {
     let inventoryCount = 0;
 
     for (const sku of inventory.station || []) {
-      await sql`INSERT INTO inventory (type, sku) VALUES ('PC', ${sku})`;
+      await sql`INSERT INTO inventory (category, sku) VALUES ('PC', ${sku})`;
       inventoryCount++;
     }
     for (const sku of inventory.tv || []) {
-      await sql`INSERT INTO inventory (type, sku) VALUES ('TV', ${sku})`;
+      await sql`INSERT INTO inventory (category, sku) VALUES ('TV', ${sku})`;
       inventoryCount++;
     }
     for (const sku of inventory.printer || []) {
-      await sql`INSERT INTO inventory (type, sku) VALUES ('PRINTER', ${sku})`;
+      await sql`INSERT INTO inventory (category, sku) VALUES ('PRINTER', ${sku})`;
       inventoryCount++;
     }
 

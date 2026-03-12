@@ -8,6 +8,7 @@ interface GridCellProps {
   asset?: Asset;
   isDragging: boolean;
   isDropTarget: boolean;
+  isEntrance: boolean;
   onPress: () => void;
   onLongPress: () => void;
   onDrop: () => void;
@@ -16,9 +17,11 @@ interface GridCellProps {
 }
 
 export function GridCell({
+  cellId,
   asset,
   isDragging,
   isDropTarget,
+  isEntrance,
   onPress,
   onLongPress,
   onDrop,
@@ -59,6 +62,7 @@ export function GridCell({
         "w-[85px] h-[85px] rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-100 select-none",
         "bg-white/[0.03] border border-white/[0.05]",
         asset && "bg-[#1c2135] border-[var(--glass-border)] shadow-lg",
+        isEntrance && "ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-transparent",
         isDragging && "opacity-50 scale-90 border-2 border-dashed border-[var(--primary)] z-10",
         isDropTarget && "!bg-[rgba(0,242,255,0.15)] !border-2 !border-[var(--primary)]"
       )}
@@ -72,6 +76,11 @@ export function GridCell({
       onClick={onDrop}
       onDragLeave={onDragLeave}
     >
+      {isEntrance && (
+        <span className="absolute top-1 left-1 text-xs bg-[var(--primary)] text-black px-1.5 py-0.5 rounded-full font-bold">
+          כניסה
+        </span>
+      )}
       {asset && (
         <>
           <span className="text-2xl mb-1 pointer-events-none">

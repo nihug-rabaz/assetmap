@@ -1,19 +1,32 @@
 "use client";
 
-import { ROOMS } from "@/lib/types";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface LobbyProps {
+  rooms: string[];
   onEnterRoom: (roomName: string) => void;
+  onCreateRoom: (roomName: string) => void;
 }
 
-export function Lobby({ onEnterRoom }: LobbyProps) {
+export function Lobby({ rooms, onEnterRoom, onCreateRoom }: LobbyProps) {
+  const [newRoomName, setNewRoomName] = useState("");
+
+  const handleCreate = () => {
+    const trimmed = newRoomName.trim();
+    if (!trimmed) return;
+    onCreateRoom(trimmed);
+    setNewRoomName("");
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-5">
       <h1 className="text-4xl font-black text-foreground">
         AssetMap <span className="text-[var(--primary)]">Latrun</span>
       </h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl">
-        {ROOMS.map((room) => (
+        {rooms.map((room) => (
           <button
             key={room}
             onClick={() => onEnterRoom(room)}
@@ -22,6 +35,20 @@ export function Lobby({ onEnterRoom }: LobbyProps) {
             <h3 className="text-lg font-bold text-foreground">{room}</h3>
           </button>
         ))}
+      </div>
+      <div className="w-full max-w-md mt-4 flex gap-2">
+        <Input
+          value={newRoomName}
+          onChange={(e) => setNewRoomName(e.target.value)}
+          placeholder="שם חדר חדש..."
+          className="bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
+        />
+        <Button
+          onClick={handleCreate}
+          className="bg-[var(--primary)] text-black font-extrabold hover:bg-[var(--primary)]/90"
+        >
+          צור חדר
+        </Button>
       </div>
     </div>
   );

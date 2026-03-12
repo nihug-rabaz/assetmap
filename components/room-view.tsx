@@ -18,6 +18,7 @@ interface RoomViewProps {
   onMoveAsset: (fromCellId: string, toCellId: string) => void;
   onUpdateDimensions: (rows: number, cols: number) => void;
   onUpdateInventory: (type: keyof Database["inventory"], items: string[]) => void;
+  onSetEntrance: (cellId: string) => void;
 }
 
 export function RoomView({
@@ -30,11 +31,13 @@ export function RoomView({
   onMoveAsset,
   onUpdateDimensions,
   onUpdateInventory,
+  onSetEntrance,
 }: RoomViewProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [assetModalOpen, setAssetModalOpen] = useState(false);
   const [selectedCellId, setSelectedCellId] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [selectingEntrance, setSelectingEntrance] = useState(false);
 
   const handleCellClick = useCallback((cellId: string) => {
     setSelectedCellId(cellId);
@@ -92,6 +95,13 @@ export function RoomView({
 
         <div className="flex gap-2">
           <Button
+            onClick={() => setSelectingEntrance((prev) => !prev)}
+            variant={selectingEntrance ? "default" : "outline"}
+            className="bg-secondary border-[var(--glass-border)] text-foreground gap-2"
+          >
+            {selectingEntrance ? "סמן ריבוע כניסה" : "בחירת כניסה"}
+          </Button>
+          <Button
             onClick={handleSync}
             variant="outline"
             className="bg-secondary border-[var(--glass-border)] text-foreground gap-2"
@@ -125,6 +135,11 @@ export function RoomView({
         room={room}
         onCellClick={handleCellClick}
         onMoveAsset={onMoveAsset}
+        isSelectingEntrance={selectingEntrance}
+        onSelectEntrance={(cellId) => {
+          onSetEntrance(cellId);
+          setSelectingEntrance(false);
+        }}
       />
 
       {/* Modals */}

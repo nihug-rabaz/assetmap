@@ -19,11 +19,21 @@ export default function Home() {
     moveAsset,
     updateRoomDimensions,
     setInventory,
+    createRoom,
+    setRoomEntrance,
   } = useAssetStore();
 
   const handleEnterRoom = useCallback((roomName: string) => {
     setCurrentRoom(roomName);
   }, []);
+
+  const handleCreateRoom = useCallback(
+    (roomName: string) => {
+      createRoom(roomName);
+      setCurrentRoom(roomName);
+    },
+    [createRoom]
+  );
 
   const handleBack = useCallback(() => {
     setCurrentRoom(null);
@@ -90,7 +100,8 @@ export default function Home() {
   }
 
   if (!currentRoom) {
-    return <Lobby onEnterRoom={handleEnterRoom} />;
+    const roomNames = Object.keys(db.rooms);
+    return <Lobby rooms={roomNames} onEnterRoom={handleEnterRoom} onCreateRoom={handleCreateRoom} />;
   }
 
   const room = getRoom(currentRoom);
@@ -106,6 +117,7 @@ export default function Home() {
       onMoveAsset={handleMoveAsset}
       onUpdateDimensions={handleUpdateDimensions}
       onUpdateInventory={handleUpdateInventory}
+      onSetEntrance={(cellId) => setRoomEntrance(currentRoom, cellId)}
     />
   );
 }

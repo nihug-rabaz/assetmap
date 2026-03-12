@@ -8,9 +8,17 @@ interface AssetGridProps {
   room: Room;
   onCellClick: (cellId: string) => void;
   onMoveAsset: (fromCellId: string, toCellId: string) => void;
+  isSelectingEntrance?: boolean;
+  onSelectEntrance?: (cellId: string) => void;
 }
 
-export function AssetGrid({ room, onCellClick, onMoveAsset }: AssetGridProps) {
+export function AssetGrid({
+  room,
+  onCellClick,
+  onMoveAsset,
+  isSelectingEntrance,
+  onSelectEntrance,
+}: AssetGridProps) {
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 
@@ -44,6 +52,10 @@ export function AssetGrid({ room, onCellClick, onMoveAsset }: AssetGridProps) {
 
   const handlePress = useCallback(
     (cellId: string) => {
+      if (isSelectingEntrance && onSelectEntrance) {
+        onSelectEntrance(cellId);
+        return;
+      }
       if (dragSource) {
         if (dragSource !== cellId) {
           onMoveAsset(dragSource, cellId);
@@ -54,7 +66,7 @@ export function AssetGrid({ room, onCellClick, onMoveAsset }: AssetGridProps) {
         onCellClick(cellId);
       }
     },
-    [dragSource, onCellClick, onMoveAsset]
+    [dragSource, onCellClick, onMoveAsset, isSelectingEntrance, onSelectEntrance]
   );
 
   const cells = [];
@@ -69,6 +81,7 @@ export function AssetGrid({ room, onCellClick, onMoveAsset }: AssetGridProps) {
           asset={asset}
           isDragging={dragSource === cellId}
           isDropTarget={dropTarget === cellId}
+          isEntrance={room.entranceCellId === cellId}
           onPress={() => handlePress(cellId)}
           onLongPress={() => handleLongPress(cellId)}
           onDrop={() => handleDrop(cellId)}

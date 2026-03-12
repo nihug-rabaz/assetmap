@@ -1,4 +1,4 @@
-export type AssetType = 'STATION' | 'PC' | 'MONITOR' | 'PRINTER' | 'TV' | 'UC';
+export type AssetType = 'STATION' | 'PC' | 'MONITOR' | 'PRINTER' | 'TV' | 'UC' | 'SWITCH';
 
 export interface Asset {
   name: string;
@@ -20,6 +20,7 @@ export interface Inventory {
   TV: string[];
   PRINTER: string[];
   UC: string[];
+  SWITCH: string[];
 }
 
 export interface Database {
@@ -34,6 +35,7 @@ export const ASSET_TYPES: { value: AssetType; label: string; icon: string }[] = 
   { value: 'PRINTER', label: 'מדפסת', icon: '🖨️' },
   { value: 'TV', label: 'טלוויזיה', icon: '📡' },
   { value: 'UC', label: 'טלפון UC', icon: '📞' },
+  { value: 'SWITCH', label: 'סוויץ׳', icon: '🔀' },
 ];
 
 export const ASSET_ICONS: Record<AssetType, string> = {
@@ -43,4 +45,5 @@ export const ASSET_ICONS: Record<AssetType, string> = {
   PRINTER: '🖨️',
   TV: '📡',
   UC: '📞',
+  SWITCH: '🔀',
 };

@@ -59,7 +59,7 @@ export function GridCell({
   return (
     <div
       className={cn(
-        "w-[85px] h-[85px] rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-100 select-none",
+        "w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-100 select-none",
         "bg-white/[0.03] border border-white/[0.05]",
         asset && "bg-[#1c2135] border-[var(--glass-border)] shadow-lg",
         isEntrance && "ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-transparent",
@@ -76,19 +76,25 @@ export function GridCell({
       onClick={onDrop}
       onDragLeave={onDragLeave}
     >
-      {isEntrance && (
-        <span className="absolute top-1 left-1 text-xs bg-[var(--primary)] text-black px-1.5 py-0.5 rounded-full font-bold">
-          כניסה
-        </span>
-      )}
-      {asset && (
+      {isEntrance ? (
         <>
-          <span className="text-2xl mb-1 pointer-events-none">
-            {ASSET_ICONS[asset.type] || "❓"}
-          </span>
+          <span className="text-2xl mb-1 pointer-events-none">🚪</span>
           <span className="text-[10px] font-extrabold text-[var(--primary)] text-center pointer-events-none px-1 truncate max-w-full">
-            {asset.name}
+            כניסה
           </span>
+        </>
+      ) : (
+        <>
+          {asset && (
+            <>
+              <span className="text-2xl mb-1 pointer-events-none">
+                {ASSET_ICONS[asset.type] || "❓"}
+              </span>
+              <span className="text-[10px] font-extrabold text-[var(--primary)] text-center pointer-events-none px-1 truncate max-w-full">
+                {asset.name}
+              </span>
+            </>
+          )}
         </>
       )}
     </div>

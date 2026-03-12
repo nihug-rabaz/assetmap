@@ -3,11 +3,13 @@
 import { useState, useCallback } from "react";
 import { Lobby } from "@/components/lobby";
 import { RoomView } from "@/components/room-view";
+import { DeviceReport } from "@/components/device-report";
 import { useAssetStore } from "@/hooks/use-asset-store";
 import type { Asset, Database } from "@/lib/types";
 
 export default function Home() {
   const [currentRoom, setCurrentRoom] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
   const {
     db,
     isLoaded,
@@ -101,7 +103,17 @@ export default function Home() {
 
   if (!currentRoom) {
     const roomNames = Object.keys(db.rooms);
-    return <Lobby rooms={roomNames} onEnterRoom={handleEnterRoom} onCreateRoom={handleCreateRoom} />;
+    if (showReport) {
+      return <DeviceReport db={db} onBack={() => setShowReport(false)} />;
+    }
+    return (
+      <Lobby
+        rooms={roomNames}
+        onEnterRoom={handleEnterRoom}
+        onCreateRoom={handleCreateRoom}
+        onOpenReport={() => setShowReport(true)}
+      />
+    );
   }
 
   const room = getRoom(currentRoom);

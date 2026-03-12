@@ -94,11 +94,11 @@ export function AssetGrid({
 
   return (
     <div
-      className="flex-1 overflow-auto p-8"
+      className="flex-1 overflow-auto px-2 py-4 sm:px-4 sm:py-6 md:p-8"
       style={{
         display: "grid",
-        gridTemplateColumns: `repeat(${room.cols}, 85px)`,
-        gap: "6px",
+        gridTemplateColumns: `repeat(${room.cols}, 72px)`,
+        gap: 6,
         justifyContent: "center",
         alignContent: "start",
       }}

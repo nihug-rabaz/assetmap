@@ -8,9 +8,10 @@ interface LobbyProps {
   rooms: string[];
   onEnterRoom: (roomName: string) => void;
   onCreateRoom: (roomName: string) => void;
+  onOpenReport: () => void;
 }
 
-export function Lobby({ rooms, onEnterRoom, onCreateRoom }: LobbyProps) {
+export function Lobby({ rooms, onEnterRoom, onCreateRoom, onOpenReport }: LobbyProps) {
   const [newRoomName, setNewRoomName] = useState("");
 
   const handleCreate = () => {
@@ -36,7 +37,8 @@ export function Lobby({ rooms, onEnterRoom, onCreateRoom }: LobbyProps) {
           </button>
         ))}
       </div>
-      <div className="w-full max-w-md mt-4 flex gap-2">
+      <div className="w-full max-w-md mt-6 flex flex-col gap-2">
+        <div className="flex gap-2">
         <Input
           value={newRoomName}
           onChange={(e) => setNewRoomName(e.target.value)}
@@ -48,6 +50,14 @@ export function Lobby({ rooms, onEnterRoom, onCreateRoom }: LobbyProps) {
           className="bg-[var(--primary)] text-black font-extrabold hover:bg-[var(--primary)]/90"
         >
           צור חדר
+        </Button>
+        </div>
+        <Button
+          variant="outline"
+          onClick={onOpenReport}
+          className="w-full bg-secondary border-[var(--glass-border)] text-foreground"
+        >
+          דוח ציוד (טבלה + CSV)
         </Button>
       </div>
     </div>

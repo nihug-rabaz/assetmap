@@ -30,6 +30,7 @@ const INVENTORY_TYPES: { value: InventoryType; label: string }[] = [
   { value: "TV", label: "TV (טלוויזיות)" },
   { value: "PRINTER", label: "PRINTER (מדפסות)" },
   { value: "UC", label: "UC (טלפוניה)" },
+  { value: "SWITCH", label: "SWITCH (סוויצ'ים)" },
 ];
 
 export function SettingsModal({ isOpen, onClose, room, inventory, onSave }: SettingsModalProps) {

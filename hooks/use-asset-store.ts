@@ -10,7 +10,7 @@ const STORAGE_KEY = "assetMap_Latrun_Final";
 
 const initialDatabase: Database = {
   rooms: {},
-  inventory: { PC: [], MONITOR: [], TV: [], PRINTER: [], UC: [] },
+  inventory: { PC: [], MONITOR: [], TV: [], PRINTER: [], UC: [], SWITCH: [] },
 };
 
 // Transform API data to our format
@@ -61,6 +61,7 @@ function transformApiData(apiData: Record<string, unknown>): Database {
       TV: apiInventory?.tv || [],
       PRINTER: apiInventory?.printer || [],
       UC: [],
+      SWITCH: [],
     },
   };
 }

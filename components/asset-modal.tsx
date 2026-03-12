@@ -88,6 +88,11 @@ export function AssetModal({
         label = 'מק"ט UC';
         pcOpts = inventory.UC || [];
         break;
+      case "SWITCH":
+        showPc = true;
+        label = 'מק"ט SWITCH';
+        pcOpts = inventory.SWITCH || [];
+        break;
     }
 
     return {
@@ -98,6 +103,11 @@ export function AssetModal({
       monOptions: monOpts,
     };
   }, [type, inventory]);
+
+  useEffect(() => {
+    setSku("");
+    setMonSku("");
+  }, [type]);
 
   const handleSave = () => {
     if (!name.trim()) {
@@ -156,17 +166,18 @@ export function AssetModal({
         {showPcSku && (
           <>
             <Label className="text-muted-foreground text-sm mt-4 block">{pcLabel}</Label>
-            <Select value={sku} onValueChange={setSku}>
+            <Select value={sku || undefined} onValueChange={setSku}>
               <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
-                <SelectValue placeholder="-- ללא --" />
+                <SelectValue placeholder={'בחר מק"ט'} />
               </SelectTrigger>
               <SelectContent className="bg-card border-[var(--glass-border)]">
-                <SelectItem value="none" className="text-foreground">-- ללא --</SelectItem>
-                {pcOptions.map((s) => (
-                  <SelectItem key={s} value={s} className="text-foreground">
-                    {s}
-                  </SelectItem>
-                ))}
+                {pcOptions
+                  .filter((s) => s && s.trim().length > 0)
+                  .map((s) => (
+                    <SelectItem key={s} value={s} className="text-foreground">
+                      {s}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </>
@@ -175,17 +186,18 @@ export function AssetModal({
         {showMonSku && (
           <>
             <Label className="text-muted-foreground text-sm mt-4 block">{'מק"ט מסך'}</Label>
-            <Select value={monSku} onValueChange={setMonSku}>
+            <Select value={monSku || undefined} onValueChange={setMonSku}>
               <SelectTrigger className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
-                <SelectValue placeholder="-- ללא --" />
+                <SelectValue placeholder={'בחר מק"ט מסך'} />
               </SelectTrigger>
               <SelectContent className="bg-card border-[var(--glass-border)]">
-                <SelectItem value="none" className="text-foreground">-- ללא --</SelectItem>
-                {monOptions.map((s) => (
-                  <SelectItem key={s} value={s} className="text-foreground">
-                    {s}
-                  </SelectItem>
-                ))}
+                {monOptions
+                  .filter((s) => s && s.trim().length > 0)
+                  .map((s) => (
+                    <SelectItem key={s} value={s} className="text-foreground">
+                      {s}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </>

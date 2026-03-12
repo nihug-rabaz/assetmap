@@ -3,34 +3,12 @@ import { neon } from "@neondatabase/serverless";
 const API_URL =
   "https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrTH8wCPy1xybz_TfQgVBSrZZzIsy4TkeW7z1aOV4br3YSx-y1486MNZuTNJC0Qc80pJ4J19gc5j_uhu_6n8ryzWbyOZFch5wjweoCheuC9bYeoVZlDGL2eUcjB7uX4RQ4QfVU1-LOFYpXyNJ7kHPqc9dvNBjmECiONIOVajFQ47TNtCJ10M5mE41mFlZSj2Xayy-hP_tcsLVWu8GQUABFx9Pfr9vVHwpzEh_O6eyPrAJ6Xxk-BbtscoKhMR3WwDJMfI65C_XNI_Zl_v3GNIx-oJil4DKhjouFEDW5Gm&lib=MUsyy__Y2hRmqp7KqBS8pDEVbNHHkxU_r";
 
-interface ApiAsset {
-  name: string;
-  type: string;
-  sku: string | number;
-  monSku: string | number;
-}
-
-interface ApiRoom {
-  rows: number;
-  cols: number;
-  assets: Record<string, ApiAsset>;
-}
-
-interface ApiData {
-  rooms: Record<string, ApiRoom>;
-  inventory?: {
-    station?: string[];
-    tv?: string[];
-    printer?: string[];
-  };
-}
-
 async function importData() {
-  const sql = neon(process.env.DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL);
 
   console.log("Fetching data from API...");
   const response = await fetch(API_URL);
-  const data: ApiData = await response.json();
+  const data = await response.json();
 
   console.log("Clearing existing data...");
   await sql`DELETE FROM assets`;

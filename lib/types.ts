@@ -27,12 +27,12 @@ export interface Database {
 }
 
 export const ROOMS = [
-  'חמ"ל רבצ"ר',
-  'חד"ן רבצ"ר',
-  'מכלול תאים',
-  'מאנ"ח',
-  'תר"ח לטרון',
-  'תר"ח לאומי',
+  "חמ'ל רבצ'ר",
+  "חד'ן רבצ'ר",
+  "מכלול תאים",
+  "מאנ'ח",
+  "תר'ח לטרון",
+  "תר'ח לאומי",
 ];
 
 export const ASSET_TYPES: { value: AssetType; label: string; icon: string }[] = [

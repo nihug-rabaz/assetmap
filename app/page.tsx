@@ -11,6 +11,8 @@ export default function Home() {
   const {
     db,
     isLoaded,
+    isLoading,
+    error,
     getRoom,
     setAsset,
     deleteAsset,
@@ -70,10 +72,19 @@ export default function Home() {
     [setInventory]
   );
 
-  if (!isLoaded) {
+  if (!isLoaded || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-[var(--primary)] text-xl">טוען...</div>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-[var(--bg-dark)]">
+        <div className="w-12 h-12 border-4 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />
+        <div className="text-[var(--primary)] text-xl">טוען נתונים מהשרת...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4 bg-[var(--bg-dark)]">
+        <div className="text-[var(--danger)] text-xl">{error}</div>
       </div>
     );
   }

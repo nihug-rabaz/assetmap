@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Asset, Database, Room } from "@/lib/types";
+import type { Asset, AssetType, Database, Room } from "@/lib/types";
+
+const API_URL =
+  "https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrTH8wCPy1xybz_TfQgVBSrZZzIsy4TkeW7z1aOV4br3YSx-y1486MNZuTNJC0Qc80pJ4J19gc5j_uhu_6n8ryzWbyOZFch5wjweoCheuC9bYeoVZlDGL2eUcjB7uX4RQ4QfVU1-LOFYpXyNJ7kHPqc9dvNBjmECiONIOVajFQ47TNtCJ10M5mE41mFlZSj2Xayy-hP_tcsLVWu8GQUABFx9Pfr9vVHwpzEh_O6eyPrAJ6Xxk-BbtscoKhMR3WwDJMfI65C_XNI_Zl_v3GNIx-oJil4DKhjouFEDW5Gm&lib=MUsyy__Y2hRmqp7KqBS8pDEVbNHHkxU_r";
 
 const STORAGE_KEY = "assetMap_Latrun_Final";
 
@@ -10,20 +13,96 @@ const initialDatabase: Database = {
   inventory: { PC: [], MONITOR: [], TV: [], PRINTER: [], UC: [] },
 };
 
+// Transform API data to our format
+function transformApiData(apiData: Record<string, unknown>): Database {
+  const rooms: Record<string, Room> = {};
+
+  const apiRooms = apiData.rooms as Record<
+    string,
+    { rows: number; cols: number; assets: Record<string, unknown> }
+  >;
+
+  for (const [roomName, roomData] of Object.entries(apiRooms)) {
+    const assets: Record<string, Asset> = {};
+
+    for (const [cellId, assetData] of Object.entries(roomData.assets || {})) {
+      // Only include valid cell IDs (format: "row-col")
+      if (/^\d+-\d+$/.test(cellId)) {
+        const data = assetData as {
+          name: string;
+          type: string;
+          sku: string | number;
+          monSku: string | number;
+        };
+        assets[cellId] = {
+          name: data.name || "",
+          type: (data.type as AssetType) || "STATION",
+          sku: String(data.sku || ""),
+          monSku: String(data.monSku || ""),
+        };
+      }
+    }
+
+    rooms[roomName] = {
+      rows: roomData.rows || 6,
+      cols: roomData.cols || 8,
+      assets,
+    };
+  }
+
+  const apiInventory = apiData.inventory as Record<string, string[]> | undefined;
+
+  return {
+    rooms,
+    inventory: {
+      PC: apiInventory?.station || [],
+      MONITOR: [],
+      TV: apiInventory?.tv || [],
+      PRINTER: apiInventory?.printer || [],
+      UC: [],
+    },
+  };
+}
+
 export function useAssetStore() {
   const [db, setDb] = useState<Database>(initialDatabase);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    async function fetchData() {
+      setIsLoading(true);
+      setError(null);
+
       try {
-        setDb(JSON.parse(saved));
-      } catch {
-        setDb(initialDatabase);
+        const response = await fetch(API_URL);
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const apiData = await response.json();
+        const transformedData = transformApiData(apiData);
+        setDb(transformedData);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(transformedData));
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        // Fallback to localStorage
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            setDb(JSON.parse(saved));
+          } catch {
+            setDb(initialDatabase);
+          }
+        }
+        setError("לא ניתן לטעון נתונים מהשרת, משתמש בנתונים מקומיים");
+      } finally {
+        setIsLoading(false);
+        setIsLoaded(true);
       }
     }
-    setIsLoaded(true);
+
+    fetchData();
   }, []);
 
   const saveLocal = useCallback((newDb: Database) => {
@@ -112,6 +191,8 @@ export function useAssetStore() {
   return {
     db,
     isLoaded,
+    isLoading,
+    error,
     getRoom,
     setRoom,
     setAsset,

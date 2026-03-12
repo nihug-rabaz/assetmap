@@ -17,6 +17,13 @@ const initialDatabase: Database = {
 function transformApiData(apiData: Record<string, unknown>): Database {
   const rooms: Record<string, Room> = {};
 
+  const pcSet = new Set<string>();
+  const monitorSet = new Set<string>();
+  const tvSet = new Set<string>();
+  const printerSet = new Set<string>();
+  const ucSet = new Set<string>();
+  const switchSet = new Set<string>();
+
   const apiRooms = apiData.rooms as Record<
     string,
     { rows: number; cols: number; assets: Record<string, unknown> }
@@ -34,12 +41,33 @@ function transformApiData(apiData: Record<string, unknown>): Database {
           sku: string | number;
           monSku: string | number;
         };
-        assets[cellId] = {
+        const asset: Asset = {
           name: data.name || "",
           type: (data.type as AssetType) || "STATION",
           sku: String(data.sku || ""),
           monSku: String(data.monSku || ""),
         };
+        assets[cellId] = asset;
+
+        if (asset.sku) {
+          if (asset.type === "PRINTER") {
+            printerSet.add(asset.sku);
+          } else if (asset.type === "UC") {
+            ucSet.add(asset.sku);
+          } else if (asset.type === "SWITCH") {
+            switchSet.add(asset.sku);
+          } else {
+            pcSet.add(asset.sku);
+          }
+        }
+
+        if (asset.monSku) {
+          if (asset.type === "TV") {
+            tvSet.add(asset.monSku);
+          } else {
+            monitorSet.add(asset.monSku);
+          }
+        }
       }
     }
 
@@ -53,15 +81,25 @@ function transformApiData(apiData: Record<string, unknown>): Database {
 
   const apiInventory = apiData.inventory as Record<string, string[]> | undefined;
 
+  for (const sku of apiInventory?.station || []) {
+    if (sku) pcSet.add(String(sku));
+  }
+  for (const sku of apiInventory?.tv || []) {
+    if (sku) tvSet.add(String(sku));
+  }
+  for (const sku of apiInventory?.printer || []) {
+    if (sku) printerSet.add(String(sku));
+  }
+
   return {
     rooms,
     inventory: {
-      PC: apiInventory?.station || [],
-      MONITOR: [],
-      TV: apiInventory?.tv || [],
-      PRINTER: apiInventory?.printer || [],
-      UC: [],
-      SWITCH: [],
+      PC: Array.from(pcSet),
+      MONITOR: Array.from(monitorSet),
+      TV: Array.from(tvSet),
+      PRINTER: Array.from(printerSet),
+      UC: Array.from(ucSet),
+      SWITCH: Array.from(switchSet),
     },
   };
 }
@@ -84,6 +122,23 @@ export function useAssetStore() {
         }
         const apiData = await response.json();
         const transformedData = transformApiData(apiData);
+
+        try {
+          const entrancesRes = await fetch("/api/rooms/entrances");
+          if (entrancesRes.ok) {
+            const entrances = (await entrancesRes.json()) as {
+              room: string;
+              cellId: string;
+            }[];
+            for (const entry of entrances) {
+              if (transformedData.rooms[entry.room]) {
+                transformedData.rooms[entry.room].entranceCellId = entry.cellId;
+              }
+            }
+          }
+        } catch {
+        }
+
         setDb(transformedData);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(transformedData));
       } catch (err) {
@@ -197,6 +252,13 @@ export function useAssetStore() {
       const room = getRoom(roomName);
       const newRoom = { ...room, entranceCellId: cellId };
       setRoom(roomName, newRoom);
+      const encodedName = encodeURIComponent(roomName);
+      const payload = { cellId };
+      fetch(`/api/rooms/${encodedName}/entrance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      }).catch(() => {});
     },
     [getRoom, setRoom]
   );

@@ -18,6 +18,8 @@ import { BarcodeScanner } from "@/components/barcode-scanner";
 interface AssetModalProps {
   isOpen: boolean;
   onClose: () => void;
+  roomName?: string;
+  cellId?: string;
   asset?: Asset;
   inventory: Database["inventory"];
   onSave: (asset: Asset) => void;
@@ -27,6 +29,8 @@ interface AssetModalProps {
 export function AssetModal({
   isOpen,
   onClose,
+  roomName,
+  cellId,
   asset,
   inventory,
   onSave,
@@ -37,6 +41,15 @@ export function AssetModal({
   const [sku, setSku] = useState("");
   const [monSku, setMonSku] = useState("");
   const [scanTarget, setScanTarget] = useState<"sku" | "mon" | null>(null);
+  const [lastCheck, setLastCheck] = useState<{
+    status: string;
+    notes: string | null;
+    checked_by: string | null;
+    checked_at: string;
+  } | null>(null);
+  const [checkStatus, setCheckStatus] = useState<"OK" | "NOT_OK">("OK");
+  const [checkNotes, setCheckNotes] = useState("");
+  const [checkBy, setCheckBy] = useState("");
 
   useEffect(() => {
     if (asset) {
@@ -51,6 +64,23 @@ export function AssetModal({
       setMonSku("");
     }
   }, [asset, isOpen]);
+
+  useEffect(() => {
+    if (!roomName || !cellId || !isOpen) {
+      setLastCheck(null);
+      return;
+    }
+    fetch(`/api/checks/${encodeURIComponent(roomName)}/${cellId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (data) {
+          setLastCheck(data);
+        } else {
+          setLastCheck(null);
+        }
+      })
+      .catch(() => setLastCheck(null));
+  }, [roomName, cellId, isOpen]);
 
   const { showPcSku, showMonSku, pcLabel, pcOptions, monOptions } = useMemo(() => {
     let showPc = false;
@@ -238,7 +268,93 @@ export function AssetModal({
         )}
 
         {asset && (
-          <div className="mt-4 pt-4 border-t border-[var(--glass-border)]">
+          <div className="mt-4 pt-4 border-t border-[var(--glass-border)] space-y-3">
+            <div className="space-y-1">
+              <div className="text-xs text-muted-foreground font-medium">בדיקה יומית</div>
+              {lastCheck ? (
+                <div className="text-[11px] text-muted-foreground space-y-0.5">
+                  <div>
+                    סטטוס אחרון:{" "}
+                    <span
+                      className={
+                        lastCheck.status === "OK" ? "text-emerald-400 font-semibold" : "text-red-400 font-semibold"
+                      }
+                    >
+                      {lastCheck.status === "OK" ? "תקין" : "לא תקין"}
+                    </span>
+                  </div>
+                  <div>בוצע ע״י: {lastCheck.checked_by || "-"}</div>
+                  <div>
+                    בתאריך:{" "}
+                    {new Date(lastCheck.checked_at).toLocaleString("he-IL", {
+                      dateStyle: "short",
+                      timeStyle: "short",
+                    })}
+                  </div>
+                  {lastCheck.notes && <div>פירוט: {lastCheck.notes}</div>}
+                </div>
+              ) : (
+                <div className="text-[11px] text-muted-foreground">
+                  לא קיימת עדיין בדיקה עבור עמדה זו.
+                </div>
+              )}
+            </div>
+            {roomName && cellId && (
+              <div className="flex flex-col gap-2 text-[11px]">
+                <div className="flex gap-2">
+                  <select
+                    value={checkStatus}
+                    onChange={(e) => setCheckStatus(e.target.value as "OK" | "NOT_OK")}
+                    className="flex-1 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground rounded px-2 py-1"
+                  >
+                    <option value="OK">תקין</option>
+                    <option value="NOT_OK">לא תקין</option>
+                  </select>
+                  <Input
+                    value={checkBy}
+                    onChange={(e) => setCheckBy(e.target.value)}
+                    placeholder="שם מבצע הבדיקה"
+                    className="flex-1 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
+                  />
+                </div>
+                <Input
+                  value={checkNotes}
+                  onChange={(e) => setCheckNotes(e.target.value)}
+                  placeholder="פירוט הבדיקה..."
+                  className="bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="bg-emerald-500 text-black font-extrabold hover:bg-emerald-500/90"
+                  onClick={async () => {
+                    if (!roomName || !cellId) return;
+                    await fetch(
+                      `/api/checks/${encodeURIComponent(roomName)}/${cellId}`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          status: checkStatus,
+                          notes: checkNotes || null,
+                          checkedBy: checkBy || null,
+                        }),
+                      }
+                    )
+                      .then((r) => (r.ok ? r.json() : null))
+                      .then((data) => {
+                        if (data) {
+                          setLastCheck(data);
+                          setCheckNotes("");
+                        }
+                      })
+                      .catch(() => {});
+                  }}
+                >
+                  שמור בדיקה יומית
+                </Button>
+              </div>
+            )}
             <Button
               onClick={handleDelete}
               className="w-full bg-[var(--danger)] text-white font-extrabold hover:bg-[var(--danger)]/90"

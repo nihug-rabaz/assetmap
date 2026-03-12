@@ -157,6 +157,8 @@ export function RoomView({
           setAssetModalOpen(false);
           setSelectedCellId(null);
         }}
+        roomName={roomName}
+        cellId={selectedCellId || undefined}
         asset={selectedAsset}
         inventory={inventory}
         onSave={handleSaveAsset}

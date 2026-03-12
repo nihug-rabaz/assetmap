@@ -37,6 +37,21 @@ CREATE TABLE IF NOT EXISTS inventory (
   UNIQUE(category, sku)
 );
 
+-- Device daily checks
+CREATE TABLE IF NOT EXISTS asset_checks (
+  id SERIAL PRIMARY KEY,
+  room_name VARCHAR(255) NOT NULL,
+  cell_row INTEGER NOT NULL,
+  cell_col INTEGER NOT NULL,
+  status VARCHAR(20) NOT NULL, -- OK / NOT_OK
+  notes TEXT,
+  checked_by VARCHAR(255),
+  checked_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_asset_checks_room_cell ON asset_checks(room_name, cell_row, cell_col, checked_at DESC);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_assets_room_id ON assets(room_id);
 CREATE INDEX IF NOT EXISTS idx_assets_cell ON assets(room_id, cell_row, cell_col);

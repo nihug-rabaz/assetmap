@@ -1,0 +1,95 @@
+import { neon } from "@neondatabase/serverless";
+
+const API_URL =
+  "https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrTH8wCPy1xybz_TfQgVBSrZZzIsy4TkeW7z1aOV4br3YSx-y1486MNZuTNJC0Qc80pJ4J19gc5j_uhu_6n8ryzWbyOZFch5wjweoCheuC9bYeoVZlDGL2eUcjB7uX4RQ4QfVU1-LOFYpXyNJ7kHPqc9dvNBjmECiONIOVajFQ47TNtCJ10M5mE41mFlZSj2Xayy-hP_tcsLVWu8GQUABFx9Pfr9vVHwpzEh_O6eyPrAJ6Xxk-BbtscoKhMR3WwDJMfI65C_XNI_Zl_v3GNIx-oJil4DKhjouFEDW5Gm&lib=MUsyy__Y2hRmqp7KqBS8pDEVbNHHkxU_r";
+
+interface ApiAsset {
+  name: string;
+  type: string;
+  sku: string | number;
+  monSku: string | number;
+}
+
+interface ApiRoom {
+  rows: number;
+  cols: number;
+  assets: Record<string, ApiAsset>;
+}
+
+interface ApiData {
+  rooms: Record<string, ApiRoom>;
+  inventory?: {
+    station?: string[];
+    tv?: string[];
+    printer?: string[];
+  };
+}
+
+async function importData() {
+  const sql = neon(process.env.DATABASE_URL!);
+
+  console.log("Fetching data from API...");
+  const response = await fetch(API_URL);
+  const data: ApiData = await response.json();
+
+  console.log("Clearing existing data...");
+  await sql`DELETE FROM assets`;
+  await sql`DELETE FROM inventory`;
+  await sql`DELETE FROM rooms`;
+
+  console.log("Importing rooms...");
+  for (const [roomName, roomData] of Object.entries(data.rooms)) {
+    await sql`
+      INSERT INTO rooms (name, rows, cols)
+      VALUES (${roomName}, ${roomData.rows || 6}, ${roomData.cols || 8})
+    `;
+    console.log(`  - Imported room: ${roomName}`);
+
+    // Import assets for this room
+    for (const [cellId, assetData] of Object.entries(roomData.assets || {})) {
+      // Only include valid cell IDs (format: "row-col")
+      if (/^\d+-\d+$/.test(cellId)) {
+        const [row, col] = cellId.split("-").map(Number);
+        await sql`
+          INSERT INTO assets (room_name, cell_row, cell_col, name, type, sku, mon_sku)
+          VALUES (
+            ${roomName},
+            ${row},
+            ${col},
+            ${assetData.name || ""},
+            ${assetData.type || "STATION"},
+            ${String(assetData.sku || "")},
+            ${String(assetData.monSku || "")}
+          )
+        `;
+      }
+    }
+    const assetCount = Object.keys(roomData.assets || {}).filter((id) =>
+      /^\d+-\d+$/.test(id)
+    ).length;
+    console.log(`    - Imported ${assetCount} assets`);
+  }
+
+  // Import inventory
+  console.log("Importing inventory...");
+  const inventory = data.inventory || {};
+
+  for (const sku of inventory.station || []) {
+    await sql`INSERT INTO inventory (type, sku) VALUES ('PC', ${sku})`;
+  }
+  console.log(`  - Imported ${(inventory.station || []).length} PC items`);
+
+  for (const sku of inventory.tv || []) {
+    await sql`INSERT INTO inventory (type, sku) VALUES ('TV', ${sku})`;
+  }
+  console.log(`  - Imported ${(inventory.tv || []).length} TV items`);
+
+  for (const sku of inventory.printer || []) {
+    await sql`INSERT INTO inventory (type, sku) VALUES ('PRINTER', ${sku})`;
+  }
+  console.log(`  - Imported ${(inventory.printer || []).length} PRINTER items`);
+
+  console.log("Data import complete!");
+}
+
+importData().catch(console.error);

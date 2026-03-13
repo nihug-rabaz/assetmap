@@ -10,6 +10,11 @@ export function PwaInstallBanner() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const installedFlag = window.localStorage.getItem("assetmap_pwa_installed");
+    if (installedFlag === "true") {
+      return;
+    }
+
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -17,7 +22,17 @@ export function PwaInstallBanner() {
     };
 
     window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
+    const appInstalledHandler = () => {
+      window.localStorage.setItem("assetmap_pwa_installed", "true");
+      setVisible(false);
+      setDeferredPrompt(null);
+    };
+    window.addEventListener("appinstalled", appInstalledHandler);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handler);
+      window.removeEventListener("appinstalled", appInstalledHandler);
+    };
   }, []);
 
   if (!visible || !deferredPrompt) return null;
@@ -37,6 +52,9 @@ export function PwaInstallBanner() {
             if (choice.outcome === "accepted") {
               setVisible(false);
               setDeferredPrompt(null);
+              if (typeof window !== "undefined") {
+                window.localStorage.setItem("assetmap_pwa_installed", "true");
+              }
             }
           }}
         >

@@ -6,7 +6,8 @@ import { AssetGrid } from "./asset-grid";
 import { SettingsModal } from "./settings-modal";
 import { AssetModal } from "./asset-modal";
 import type { Asset, Database, Room } from "@/lib/types";
-import { ArrowRight, Settings } from "lucide-react";
+import { normalizeGershayim } from "@/lib/utils";
+import { ArrowRight, CircleX, Settings } from "lucide-react";
 
 interface RoomViewProps {
   roomName: string;
@@ -18,7 +19,7 @@ interface RoomViewProps {
   onMoveAsset: (fromCellId: string, toCellId: string) => void;
   onUpdateDimensions: (rows: number, cols: number) => void;
   onUpdateInventory: (type: keyof Database["inventory"], items: string[]) => void;
-  onSetEntrance: (cellId: string) => void;
+  onSetEntrance: (cellId: string | null) => void;
 }
 
 export function RoomView({
@@ -38,9 +39,15 @@ export function RoomView({
   const [selectedCellId, setSelectedCellId] = useState<string | null>(null);
   const [pendingAddCellId, setPendingAddCellId] = useState<string | null>(null);
   const [moveSourceCellId, setMoveSourceCellId] = useState<string | null>(null);
+  const [selectingEntrance, setSelectingEntrance] = useState(false);
 
   const handleCellClick = useCallback(
     (cellId: string) => {
+      if (selectingEntrance) {
+        onSetEntrance(cellId);
+        setSelectingEntrance(false);
+        return;
+      }
       const hasAsset = !!room.assets[cellId];
       const isEntrance = room.entranceCellId === cellId;
       if (moveSourceCellId !== null) {
@@ -70,7 +77,7 @@ export function RoomView({
         setPendingAddCellId(cellId);
       }
     },
-    [room.assets, room.entranceCellId, moveSourceCellId, pendingAddCellId, onSetEntrance, onMoveAsset]
+    [room.assets, room.entranceCellId, moveSourceCellId, pendingAddCellId, selectingEntrance, onSetEntrance, onMoveAsset]
   );
 
   const handleSaveAsset = useCallback(
@@ -111,9 +118,28 @@ export function RoomView({
           חזרה
         </Button>
 
-        <h3 className="text-lg font-bold text-[var(--primary)]">{roomName}</h3>
+        <h3 className="text-lg font-bold text-[var(--primary)]">{normalizeGershayim(roomName)}</h3>
 
         <div className="flex gap-2">
+          <Button
+            onClick={() => setSelectingEntrance((p) => !p)}
+            variant={selectingEntrance ? "default" : "outline"}
+            size="sm"
+            className="bg-secondary border-[var(--glass-border)] text-foreground gap-1 text-xs"
+          >
+            סמן כניסה
+          </Button>
+          {room.entranceCellId && (
+            <Button
+              onClick={() => onSetEntrance(null)}
+              variant="outline"
+              size="sm"
+              className="bg-secondary border-[var(--glass-border)] text-foreground gap-1 text-xs"
+            >
+              <CircleX className="w-3.5 h-3.5" />
+              הסר כניסה
+            </Button>
+          )}
           <Button
             onClick={() => setSettingsOpen(true)}
             variant="outline"
@@ -155,6 +181,15 @@ export function RoomView({
         inventory={inventory}
         onSave={handleSaveAsset}
         onDelete={handleDeleteAsset}
+        onSetAsEntrance={
+          selectedCellId
+            ? () => {
+                onSetEntrance(selectedCellId);
+                setAssetModalOpen(false);
+                setSelectedCellId(null);
+              }
+            : undefined
+        }
       />
     </div>
   );

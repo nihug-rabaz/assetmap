@@ -1,4 +1,5 @@
 import type { Asset, Database, Room } from "@/lib/types";
+import { getDefaultEntranceCell } from "@/lib/utils";
 
 export function mergeDatabase(existing: Database, incoming: Database): Database {
   const rooms: Record<string, Room> = { ...existing.rooms };
@@ -7,7 +8,7 @@ export function mergeDatabase(existing: Database, incoming: Database): Database 
     const current = rooms[roomName];
     const base: Room = current
       ? { ...current, assets: { ...current.assets } }
-      : { rows: incRoom.rows || 6, cols: incRoom.cols || 8, assets: {}, entranceCellId: "0-0" };
+      : { rows: incRoom.rows || 6, cols: incRoom.cols || 8, assets: {}, entranceCellId: getDefaultEntranceCell(incRoom.rows || 6, incRoom.cols || 8, {}) };
 
     for (const [cellId, asset] of Object.entries(incRoom.assets)) {
       if (!/^\d+-\d+$/.test(cellId)) continue;
@@ -16,7 +17,7 @@ export function mergeDatabase(existing: Database, incoming: Database): Database 
       }
     }
     if (!current?.entranceCellId && base.entranceCellId == null) {
-      base.entranceCellId = "0-0";
+      base.entranceCellId = getDefaultEntranceCell(base.rows, base.cols, base.assets);
     }
     rooms[roomName] = base;
   }

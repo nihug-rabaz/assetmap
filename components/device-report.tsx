@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Database } from "@/lib/types";
+import { normalizeGershayim } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -158,7 +159,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
               <option value="ALL">כל החדרים</option>
               {Array.from(new Set(rows.map((r) => r.room))).map((room) => (
                 <option key={room} value={room}>
-                  {room}
+                  {normalizeGershayim(room)}
                 </option>
               ))}
             </select>
@@ -367,19 +368,10 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
           <TableBody>
             {filteredAndSorted.map((row, idx) => (
               <TableRow key={`${row.room}-${row.cell}-${idx}`}>
-                <TableCell>{row.room}</TableCell>
+                <TableCell>{normalizeGershayim(row.room)}</TableCell>
                 <TableCell>{row.cell}</TableCell>
                 <TableCell>{row.name}</TableCell>
-                <TableCell className="flex items-center gap-2">
-                  {row.type === "ENTRANCE" ? (
-                    <>
-                      <img src="/entrance-icon.png" alt="" className="w-6 h-6 object-contain" />
-                      <span>{row.name}</span>
-                    </>
-                  ) : (
-                    row.type
-                  )}
-                </TableCell>
+                <TableCell>{row.type === "ENTRANCE" ? "🚪 " + row.name : row.type}</TableCell>
                 <TableCell>{row.sku}</TableCell>
                 <TableCell>{row.monSku}</TableCell>
               </TableRow>

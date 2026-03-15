@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Asset, AssetType, Database, Room } from "@/lib/types";
 import { parseExcelToDatabase } from "@/lib/excel-parser";
 import { mergeDatabase } from "@/lib/merge-database";
+import { getDefaultEntranceCell, normalizeGershayim } from "@/lib/utils";
 
 const API_URL =
   "https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrTH8wCPy1xybz_TfQgVBSrZZzIsy4TkeW7z1aOV4br3YSx-y1486MNZuTNJC0Qc80pJ4J19gc5j_uhu_6n8ryzWbyOZFch5wjweoCheuC9bYeoVZlDGL2eUcjB7uX4RQ4QfVU1-LOFYpXyNJ7kHPqc9dvNBjmECiONIOVajFQ47TNtCJ10M5mE41mFlZSj2Xayy-hP_tcsLVWu8GQUABFx9Pfr9vVHwpzEh_O6eyPrAJ6Xxk-BbtscoKhMR3WwDJMfI65C_XNI_Zl_v3GNIx-oJil4DKhjouFEDW5Gm&lib=MUsyy__Y2hRmqp7KqBS8pDEVbNHHkxU_r";
@@ -31,7 +32,8 @@ function transformApiData(apiData: Record<string, unknown>): Database {
     { rows: number; cols: number; assets: Record<string, unknown> }
   >;
 
-  for (const [roomName, roomData] of Object.entries(apiRooms)) {
+  for (const [rawName, roomData] of Object.entries(apiRooms)) {
+    const roomName = normalizeGershayim(rawName);
     const assets: Record<string, Asset> = {};
 
     for (const [cellId, assetData] of Object.entries(roomData.assets || {})) {
@@ -118,6 +120,65 @@ export function useAssetStore() {
       setError(null);
 
       try {
+        const dbRes = await fetch("/api/rooms");
+        if (dbRes.ok) {
+          const dbData = (await dbRes.json()) as { rooms: Record<string, { rows: number; cols: number; assets: Record<string, { name: string; type: string; sku: string; monSku: string }>; entranceCellId: string | null }> };
+          const rooms = dbData.rooms || {};
+          if (Object.keys(rooms).length > 0) {
+            const pcSet = new Set<string>();
+            const monitorSet = new Set<string>();
+            const tvSet = new Set<string>();
+            const printerSet = new Set<string>();
+            const ucSet = new Set<string>();
+            const switchSet = new Set<string>();
+            const normalizedRooms: Record<string, Room> = {};
+            for (const [rawName, r] of Object.entries(rooms)) {
+              const roomName = normalizeGershayim(rawName);
+              const assets: Record<string, Asset> = {};
+              for (const [cellId, a] of Object.entries(r.assets || {})) {
+                if (!/^\d+-\d+$/.test(cellId)) continue;
+                const asset: Asset = { name: a.name, type: (a.type as AssetType) || "STATION", sku: a.sku ?? "", monSku: a.monSku ?? "" };
+                assets[cellId] = asset;
+                if (asset.sku) {
+                  if (asset.type === "PRINTER") printerSet.add(asset.sku);
+                  else if (asset.type === "UC") ucSet.add(asset.sku);
+                  else if (asset.type === "SWITCH") switchSet.add(asset.sku);
+                  else pcSet.add(asset.sku);
+                }
+                if (asset.monSku) {
+                  if (asset.type === "TV") tvSet.add(asset.monSku);
+                  else monitorSet.add(asset.monSku);
+                }
+              }
+              normalizedRooms[roomName] = {
+                rows: r.rows ?? 6,
+                cols: r.cols ?? 8,
+                assets,
+                entranceCellId: r.entranceCellId ?? getDefaultEntranceCell(r.rows ?? 6, r.cols ?? 8, assets),
+              };
+            }
+            const fromDb: Database = {
+              rooms: normalizedRooms,
+              inventory: {
+                PC: Array.from(pcSet),
+                MONITOR: Array.from(monitorSet),
+                TV: Array.from(tvSet),
+                PRINTER: Array.from(printerSet),
+                UC: Array.from(ucSet),
+                SWITCH: Array.from(switchSet),
+              },
+            };
+            setDb(fromDb);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fromDb));
+            setIsLoading(false);
+            setIsLoaded(true);
+            return;
+          }
+        }
+      } catch {
+      }
+
+      try {
         const response = await fetch(API_URL);
         if (!response.ok) {
           throw new Error("Failed to fetch data");
@@ -133,8 +194,9 @@ export function useAssetStore() {
               cellId: string;
             }[];
             for (const entry of entrances) {
-              if (transformedData.rooms[entry.room]) {
-                transformedData.rooms[entry.room].entranceCellId = entry.cellId;
+              const key = normalizeGershayim(entry.room);
+              if (transformedData.rooms[key]) {
+                transformedData.rooms[key].entranceCellId = entry.cellId;
               }
             }
           }
@@ -145,11 +207,15 @@ export function useAssetStore() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(transformedData));
       } catch (err) {
         console.error("Error fetching data:", err);
-        // Fallback to localStorage
         const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           try {
-            setDb(JSON.parse(saved));
+            const parsed = JSON.parse(saved) as Database;
+            const normalizedRooms: Record<string, Room> = {};
+            for (const [key, room] of Object.entries(parsed.rooms || {})) {
+              normalizedRooms[normalizeGershayim(key)] = room;
+            }
+            setDb({ ...parsed, rooms: normalizedRooms });
           } catch {
             setDb(initialDatabase);
           }
@@ -188,9 +254,12 @@ export function useAssetStore() {
   );
 
   const createRoom = useCallback(
-    (roomName: string, rows = 6, cols = 8) => {
+    (name: string, rowsCount = 6, colsCount = 8) => {
+      const roomName = normalizeGershayim(name);
       const existing = db.rooms[roomName];
-      const room: Room = existing || { rows, cols, assets: {}, entranceCellId: "0-0" };
+      const assets = existing?.assets ?? {};
+      const defaultEntrance = getDefaultEntranceCell(rowsCount, colsCount, assets);
+      const room: Room = existing || { rows: rowsCount, cols: colsCount, assets: {}, entranceCellId: defaultEntrance };
       const newDb = {
         ...db,
         rooms: { ...db.rooms, [roomName]: room },

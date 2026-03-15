@@ -33,10 +33,9 @@ export default function Home() {
   const handleCreateRoom = useCallback(
     (roomName: string) => {
       createRoom(roomName);
-      setRoomEntrance(roomName, "0-0");
       setCurrentRoom(roomName);
     },
-    [createRoom, setRoomEntrance]
+    [createRoom]
   );
 
   const handleBack = useCallback(() => {

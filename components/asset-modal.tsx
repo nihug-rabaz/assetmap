@@ -24,6 +24,7 @@ interface AssetModalProps {
   inventory: Database["inventory"];
   onSave: (asset: Asset) => void;
   onDelete: () => void;
+  onSetAsEntrance?: () => void;
 }
 
 export function AssetModal({
@@ -35,6 +36,7 @@ export function AssetModal({
   inventory,
   onSave,
   onDelete,
+  onSetAsEntrance,
 }: AssetModalProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<AssetType>("STATION");
@@ -354,6 +356,19 @@ export function AssetModal({
                   שמור בדיקה יומית
                 </Button>
               </div>
+            )}
+            {onSetAsEntrance && cellId && (
+              <Button
+                type="button"
+                onClick={() => {
+                  onSetAsEntrance();
+                  onClose();
+                }}
+                variant="outline"
+                className="w-full border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--primary)]/10"
+              >
+                הגדר ככניסה 🚪
+              </Button>
             )}
             <Button
               onClick={handleDelete}

@@ -6,10 +6,7 @@ export async function POST(
   context: { params: Promise<{ roomName: string }> }
 ) {
   try {
-    const connectionString =
-      process.env.DATABASE_URL ||
-      "postgresql://neondb_owner:npg_G2tKpTXmoBu7@ep-bitter-queen-a4ofezvy-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
-    const sql = neon(connectionString);
+    const sql = neon(process.env.DATABASE_URL!);
     const { roomName } = await context.params;
     const body = await request.json();
     const cellId: string | null = body?.cellId ?? null;

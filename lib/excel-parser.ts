@@ -1,4 +1,5 @@
 import type { Asset, AssetType, Database, Room } from "@/lib/types";
+import { getDefaultEntranceCell, normalizeGershayim } from "@/lib/utils";
 
 const ASSET_TYPES = ["STATION", "PC", "MONITOR", "PRINTER", "TV", "UC", "SWITCH"] as const;
 const TYPE_ALIASES: Record<string, AssetType> = {
@@ -67,7 +68,7 @@ export function parseExcelToDatabase(xlsxModule: { read: (b: ArrayBuffer, o: obj
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
     if (!row || row.length === 0) continue;
-    const roomName = String(row[roomCol] ?? "").trim();
+    const roomName = normalizeGershayim(String(row[roomCol] ?? "").trim());
     if (!roomName) continue;
     const r = Math.max(0, parseInt(String(row[rowCol] ?? 0), 10) || 0);
     const c = Math.max(0, parseInt(String(row[colCol] ?? 0), 10) || 0);
@@ -77,7 +78,7 @@ export function parseExcelToDatabase(xlsxModule: { read: (b: ArrayBuffer, o: obj
     const monSku = String(row[monCol] ?? "").trim();
 
     if (!rooms[roomName]) {
-      rooms[roomName] = { rows: 6, cols: 8, assets: {}, entranceCellId: "0-0" };
+      rooms[roomName] = { rows: 6, cols: 8, assets: {}, entranceCellId: null };
     }
     const cid = cellId(r, c);
     rooms[roomName].assets[cid] = { name, type, sku, monSku };
@@ -92,6 +93,10 @@ export function parseExcelToDatabase(xlsxModule: { read: (b: ArrayBuffer, o: obj
       if (type === "TV") tvSet.add(monSku);
       else monitorSet.add(monSku);
     }
+  }
+
+  for (const room of Object.values(rooms)) {
+    room.entranceCellId = getDefaultEntranceCell(room.rows, room.cols, room.assets);
   }
 
   return {

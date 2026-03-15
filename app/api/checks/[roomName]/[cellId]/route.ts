@@ -2,10 +2,7 @@ import { neon } from "@neondatabase/serverless";
 import { NextResponse } from "next/server";
 
 function getConnection() {
-  const connectionString =
-    process.env.DATABASE_URL ||
-    "postgresql://neondb_owner:npg_G2tKpTXmoBu7@ep-bitter-queen-a4ofezvy-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
-  return neon(connectionString);
+  return neon(process.env.DATABASE_URL!);
 }
 
 export async function GET(

@@ -31,22 +31,22 @@ export function GridCell({
   onDragEnter,
   onDragLeave,
 }: GridCellProps) {
-  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const isLongPressRef = useRef(false);
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const movedRef = useRef(false);
+  const dragStartedByMoveRef = useRef(false);
 
   const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-    isLongPressRef.current = false;
     movedRef.current = false;
+    dragStartedByMoveRef.current = false;
     const x = "touches" in e ? e.touches[0].clientX : e.clientX;
     const y = "touches" in e ? e.touches[0].clientY : e.clientY;
     startRef.current = { x, y };
-    if (asset || isEntrance) {
-      pressTimerRef.current = setTimeout(() => {
-        isLongPressRef.current = true;
-        onLongPress();
-      }, 550);
+  };
+
+  const startDragIfMoved = () => {
+    if ((asset || isEntrance) && startRef.current && !dragStartedByMoveRef.current) {
+      dragStartedByMoveRef.current = true;
+      onLongPress();
     }
   };
 
@@ -58,6 +58,7 @@ export function GridCell({
     const dy = Math.abs(y - startRef.current.y);
     if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
       movedRef.current = true;
+      startDragIfMoved();
     }
   };
 
@@ -67,25 +68,18 @@ export function GridCell({
     const dy = Math.abs(e.clientY - startRef.current.y);
     if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
       movedRef.current = true;
+      startDragIfMoved();
     }
   };
 
-  const handleEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
-    if (!isLongPressRef.current && !movedRef.current) {
+  const handleEnd = () => {
+    if (!dragStartedByMoveRef.current && !movedRef.current) {
       onPress();
     }
     startRef.current = null;
   };
 
   const handleCancel = () => {
-    if (pressTimerRef.current) {
-      clearTimeout(pressTimerRef.current);
-      pressTimerRef.current = null;
-    }
     startRef.current = null;
   };
 
@@ -93,10 +87,10 @@ export function GridCell({
     <div
       data-cell-id={cellId}
       className={cn(
-        "w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-100 select-none",
+        "w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-xl flex flex-col items-center justify-center relative transition-all duration-100 select-none",
+        (asset || isEntrance) ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-pointer",
         "bg-white/[0.03] border border-white/[0.05]",
-        asset && "bg-[#1c2135] border-[var(--glass-border)] shadow-lg",
-        isEntrance && "ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-transparent",
+        (asset || isEntrance) && "bg-[#1c2135] border-[var(--glass-border)] shadow-lg",
         isDragging && "opacity-50 scale-90 border-2 border-dashed border-[var(--primary)] z-10",
         isDropTarget && "!bg-[rgba(0,242,255,0.15)] !border-2 !border-[var(--primary)]"
       )}
@@ -115,7 +109,7 @@ export function GridCell({
         <span className="text-3xl font-light text-[var(--primary)] pointer-events-none">+</span>
       ) : isEntrance ? (
         <>
-          <img src="/entrance-icon.png" alt="" className="w-10 h-10 sm:w-11 sm:h-11 mb-1 object-contain pointer-events-none" />
+          <span className="text-2xl mb-1 pointer-events-none">🚪</span>
           <span className="text-[10px] font-extrabold text-[var(--primary)] text-center pointer-events-none px-1 truncate max-w-full">
             כניסה
           </span>

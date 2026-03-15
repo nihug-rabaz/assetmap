@@ -148,7 +148,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
         </a>
       </div>
 
-      <div className="flex flex-col gap-3 flex-1 bg-card rounded-2xl border border-[var(--glass-border)] p-3">
+      <div className="flex flex-col gap-3 flex-1 bg-card rounded-2xl border border-[var(--glass-border)] p-3 max-w-full">
         <div className="flex flex-wrap gap-2 items-center justify-between">
           <div className="flex flex-wrap gap-2">
             <select
@@ -179,7 +179,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
           <div className="flex-1" />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 bg-[var(--bg-dark)]/40 border border-[var(--glass-border)] rounded-xl px-3 py-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 bg-[var(--bg-dark)]/40 border border-[var(--glass-border)] rounded-xl px-2 py-2 text-[10px] sm:text-xs">
           {filters.map((f) => (
             <div
               key={f.id}
@@ -294,11 +294,12 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
           )}
         </div>
 
-        <Table>
+        <div className="flex-1 overflow-auto">
+          <Table className="w-full text-[10px] sm:text-xs md:text-sm">
           <TableHeader>
             <TableRow>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right px-1 py-1"
                 onClick={() => {
                   setSortDirection((prev) =>
                     sortField === "room" ? (prev === "asc" ? "desc" : "asc") : "asc"
@@ -309,7 +310,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                 חדר {sortField === "room" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right px-1 py-1"
                 onClick={() => {
                   setSortDirection((prev) =>
                     sortField === "cell" ? (prev === "asc" ? "desc" : "asc") : "asc"
@@ -320,7 +321,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                 תא {sortField === "cell" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right px-1 py-1"
                 onClick={() => {
                   setSortDirection((prev) =>
                     sortField === "name" ? (prev === "asc" ? "desc" : "asc") : "asc"
@@ -331,7 +332,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                 שם {sortField === "name" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right px-1 py-1"
                 onClick={() => {
                   setSortDirection((prev) =>
                     sortField === "type" ? (prev === "asc" ? "desc" : "asc") : "asc"
@@ -342,7 +343,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                 סוג {sortField === "type" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right px-1 py-1"
                 onClick={() => {
                   setSortDirection((prev) =>
                     sortField === "sku" ? (prev === "asc" ? "desc" : "asc") : "asc"
@@ -353,7 +354,7 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                 מק&quot;ט {sortField === "sku" ? (sortDirection === "asc" ? "↑" : "↓") : ""}
               </TableHead>
               <TableHead
-                className="cursor-pointer text-right"
+                className="cursor-pointer text-right px-1 py-1"
                 onClick={() => {
                   setSortDirection((prev) =>
                     sortField === "monSku" ? (prev === "asc" ? "desc" : "asc") : "asc"
@@ -368,16 +369,19 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
           <TableBody>
             {filteredAndSorted.map((row, idx) => (
               <TableRow key={`${row.room}-${row.cell}-${idx}`}>
-                <TableCell>{normalizeGershayim(row.room)}</TableCell>
-                <TableCell>{row.cell}</TableCell>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>{row.type === "ENTRANCE" ? "🚪 " + row.name : row.type}</TableCell>
-                <TableCell>{row.sku}</TableCell>
-                <TableCell>{row.monSku}</TableCell>
+                <TableCell className="px-1 py-1 whitespace-nowrap">{normalizeGershayim(row.room)}</TableCell>
+                <TableCell className="px-1 py-1 whitespace-nowrap">{row.cell}</TableCell>
+                <TableCell className="px-1 py-1 whitespace-nowrap">{row.name}</TableCell>
+                <TableCell className="px-1 py-1 whitespace-nowrap">
+                  {row.type === "ENTRANCE" ? "🚪 " + row.name : row.type}
+                </TableCell>
+                <TableCell className="px-1 py-1 whitespace-nowrap">{row.sku}</TableCell>
+                <TableCell className="px-1 py-1 whitespace-nowrap">{row.monSku}</TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
+        </div>
       </div>
     </div>
   );

@@ -25,6 +25,11 @@ export function useAssetStore() {
       setError(null);
 
       try {
+        try {
+          localStorage.removeItem("assetMap_Latrun_Final");
+        } catch {
+        }
+
         const dbRes = await fetch("/api/rooms");
         if (dbRes.ok) {
           try {

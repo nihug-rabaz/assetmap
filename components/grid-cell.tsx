@@ -1,7 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import { cn } from "@/lib/utils";
 import { ASSET_ICONS, type Asset } from "@/lib/types";
+
+const TAP_MOVE_THRESHOLD_PX = 12;
 
 interface GridCellProps {
   cellId: string;
@@ -28,36 +31,67 @@ export function GridCell({
   onDragEnter,
   onDragLeave,
 }: GridCellProps) {
-  let pressTimer: ReturnType<typeof setTimeout> | null = null;
-  let isLongPress = false;
+  const pressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLongPressRef = useRef(false);
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const movedRef = useRef(false);
 
-  const handleStart = () => {
-    isLongPress = false;
+  const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+    isLongPressRef.current = false;
+    movedRef.current = false;
+    const x = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const y = "touches" in e ? e.touches[0].clientY : e.clientY;
+    startRef.current = { x, y };
     if (asset || isEntrance) {
-      pressTimer = setTimeout(() => {
-        isLongPress = true;
+      pressTimerRef.current = setTimeout(() => {
+        isLongPressRef.current = true;
         onLongPress();
       }, 550);
     }
   };
 
-  const handleEnd = () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
-    }
-    if (!isLongPress) {
-      onPress();
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!startRef.current) return;
+    const x = e.touches[0].clientX;
+    const y = e.touches[0].clientY;
+    const dx = Math.abs(x - startRef.current.x);
+    const dy = Math.abs(y - startRef.current.y);
+    if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
+      movedRef.current = true;
     }
   };
 
-  const handleCancel = () => {
-    if (pressTimer) {
-      clearTimeout(pressTimer);
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!startRef.current) return;
+    const dx = Math.abs(e.clientX - startRef.current.x);
+    const dy = Math.abs(e.clientY - startRef.current.y);
+    if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
+      movedRef.current = true;
     }
+  };
+
+  const handleEnd = (e: React.MouseEvent | React.TouchEvent) => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    if (!isLongPressRef.current && !movedRef.current) {
+      onPress();
+    }
+    startRef.current = null;
+  };
+
+  const handleCancel = () => {
+    if (pressTimerRef.current) {
+      clearTimeout(pressTimerRef.current);
+      pressTimerRef.current = null;
+    }
+    startRef.current = null;
   };
 
   return (
     <div
+      data-cell-id={cellId}
       className={cn(
         "w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-xl flex flex-col items-center justify-center cursor-pointer relative transition-all duration-100 select-none",
         "bg-white/[0.03] border border-white/[0.05]",
@@ -67,9 +101,11 @@ export function GridCell({
         isDropTarget && "!bg-[rgba(0,242,255,0.15)] !border-2 !border-[var(--primary)]"
       )}
       onMouseDown={handleStart}
+      onMouseMove={handleMouseMove}
       onMouseUp={handleEnd}
       onMouseLeave={handleCancel}
       onTouchStart={handleStart}
+      onTouchMove={handleTouchMove}
       onTouchEnd={handleEnd}
       onTouchCancel={handleCancel}
       onMouseEnter={onDragEnter}

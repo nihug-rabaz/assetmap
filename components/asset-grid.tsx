@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { GridCell } from "./grid-cell";
 import type { Room } from "@/lib/types";
 
@@ -21,10 +21,31 @@ export function AssetGrid({
 }: AssetGridProps) {
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   const handleLongPress = useCallback((cellId: string) => {
     setDragSource(cellId);
   }, []);
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!dragSource || !e.touches.length) return;
+      const touch = e.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const cellEl = el?.closest("[data-cell-id]");
+      const targetId = cellEl?.getAttribute("data-cell-id") ?? null;
+      setDropTarget((prev) => (targetId && targetId !== dragSource ? targetId : null));
+    },
+    [dragSource]
+  );
+
+  useEffect(() => {
+    if (!dragSource || !gridRef.current) return;
+    const el = gridRef.current;
+    const preventScroll = (e: TouchEvent) => e.touches.length === 1 && e.preventDefault();
+    el.addEventListener("touchmove", preventScroll, { passive: false });
+    return () => el.removeEventListener("touchmove", preventScroll);
+  }, [dragSource]);
 
   const handleDragEnter = useCallback(
     (cellId: string) => {
@@ -83,6 +104,7 @@ export function AssetGrid({
 
   return (
     <div
+      ref={gridRef}
       className="flex-1 overflow-auto px-2 py-4 sm:px-4 sm:py-6 md:p-8"
       style={{
         display: "grid",
@@ -91,6 +113,7 @@ export function AssetGrid({
         justifyContent: "center",
         alignContent: "start",
       }}
+      onTouchMove={dragSource ? handleTouchMove : undefined}
     >
       {cells}
     </div>

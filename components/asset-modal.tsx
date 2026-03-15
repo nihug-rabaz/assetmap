@@ -374,7 +374,7 @@ export function AssetModal({
               onClick={handleDelete}
               className="w-full bg-[var(--danger)] text-white font-extrabold hover:bg-[var(--danger)]/90"
             >
-              {"מחק עמדה 🗑️"}
+              {"מחק תא 🗑️"}
             </Button>
           </div>
         )}

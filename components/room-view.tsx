@@ -64,7 +64,14 @@ export function RoomView({
         setMoveSourceCellId(null);
         return;
       }
-      if (hasAsset || isEntrance) {
+      if (hasAsset) {
+        setSelectedCellId(cellId);
+        setAssetModalOpen(true);
+        setPendingAddCellId(null);
+        setMoveSourceCellId(null);
+        return;
+      }
+      if (isEntrance) {
         setMoveSourceCellId(cellId);
         setPendingAddCellId(null);
         return;

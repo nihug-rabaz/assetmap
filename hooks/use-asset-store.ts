@@ -6,8 +6,6 @@ import { parseExcelToDatabase } from "@/lib/excel-parser";
 import { mergeDatabase } from "@/lib/merge-database";
 import { getDefaultEntranceCell, normalizeGershayim } from "@/lib/utils";
 
-const STORAGE_KEY = "assetMap_Latrun_DB_v2";
-
 const initialDatabase: Database = {
   rooms: {},
   inventory: { PC: [], MONITOR: [], TV: [], PRINTER: [], UC: [], SWITCH: [] },
@@ -25,11 +23,6 @@ export function useAssetStore() {
       setError(null);
 
       try {
-        try {
-          localStorage.removeItem("assetMap_Latrun_Final");
-        } catch {
-        }
-
         const dbRes = await fetch("/api/rooms");
         if (dbRes.ok) {
           try {
@@ -99,7 +92,6 @@ export function useAssetStore() {
                 },
               };
               setDb(fromDb);
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(fromDb));
               setIsLoading(false);
               setIsLoaded(true);
               return;
@@ -111,23 +103,8 @@ export function useAssetStore() {
       } catch {
       }
 
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved) as Database;
-          const normalizedRooms: Record<string, Room> = {};
-          for (const [key, room] of Object.entries(parsed.rooms || {})) {
-            normalizedRooms[normalizeGershayim(key)] = room;
-          }
-          setDb({ ...parsed, rooms: normalizedRooms });
-        } else {
-          setDb(initialDatabase);
-        }
-      } catch {
-        setDb(initialDatabase);
-      }
-
-      setError("לא ניתן לטעון נתונים מהשרת, משתמש בנתונים מקומיים");
+      setDb(initialDatabase);
+      setError("לא ניתן לטעון נתונים מהשרת");
       setIsLoading(false);
       setIsLoaded(true);
     }
@@ -136,7 +113,6 @@ export function useAssetStore() {
   }, []);
 
   const saveLocal = useCallback((newDb: Database) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
     fetch("/api/rooms/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -160,7 +136,7 @@ export function useAssetStore() {
       setDb(newDb);
       saveLocal(newDb);
     },
-    [db, saveLocal]
+    [db]
   );
 
   const createRoom = useCallback(
@@ -177,7 +153,7 @@ export function useAssetStore() {
       setDb(newDb);
       saveLocal(newDb);
     },
-    [db, saveLocal]
+    [db]
   );
 
   const setAsset = useCallback(
@@ -253,7 +229,7 @@ export function useAssetStore() {
       setDb(newDb);
       saveLocal(newDb);
     },
-    [db, saveLocal]
+    [db]
   );
 
   const mergeFromExcel = useCallback(
@@ -276,7 +252,7 @@ export function useAssetStore() {
       saveLocal(merged);
       return { addedRooms, addedAssets };
     },
-    [db, saveLocal]
+    [db]
   );
 
   return {

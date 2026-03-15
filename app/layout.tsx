@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   generator: 'v0.app',
   themeColor: '#00f2ff',
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/entrance-icon.png',
+    apple: '/entrance-icon.png',
+  },
 }
 
 export const viewport: Viewport = {

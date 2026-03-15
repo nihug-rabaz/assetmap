@@ -9,9 +9,16 @@
   "dir": "rtl",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "180x180",
-      "type": "image/svg+xml"
+      "src": "/entrance-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/entrance-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

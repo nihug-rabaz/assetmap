@@ -7,7 +7,7 @@ import { SettingsModal } from "./settings-modal";
 import { AssetModal } from "./asset-modal";
 import type { Asset, Database, Room } from "@/lib/types";
 import { normalizeGershayim } from "@/lib/utils";
-import { ArrowRight, CircleX, Settings } from "lucide-react";
+import { ArrowRight, Minus, Settings } from "lucide-react";
 
 interface RoomViewProps {
   roomName: string;
@@ -143,7 +143,7 @@ export function RoomView({
               size="sm"
               className="bg-secondary border-[var(--glass-border)] text-foreground gap-1 text-xs"
             >
-              <CircleX className="w-3.5 h-3.5" />
+              <Minus className="w-3.5 h-3.5" />
               הסר כניסה
             </Button>
           )}

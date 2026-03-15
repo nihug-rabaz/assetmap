@@ -23,6 +23,7 @@ export default function Home() {
     setInventory,
     createRoom,
     setRoomEntrance,
+    mergeFromExcel,
   } = useAssetStore();
 
   const handleEnterRoom = useCallback((roomName: string) => {
@@ -32,9 +33,10 @@ export default function Home() {
   const handleCreateRoom = useCallback(
     (roomName: string) => {
       createRoom(roomName);
+      setRoomEntrance(roomName, "0-0");
       setCurrentRoom(roomName);
     },
-    [createRoom]
+    [createRoom, setRoomEntrance]
   );
 
   const handleBack = useCallback(() => {
@@ -112,6 +114,7 @@ export default function Home() {
         onEnterRoom={handleEnterRoom}
         onCreateRoom={handleCreateRoom}
         onOpenReport={() => setShowReport(true)}
+        onImportExcel={mergeFromExcel}
       />
     );
   }

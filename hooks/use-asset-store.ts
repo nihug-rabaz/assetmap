@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Asset, AssetType, Database, Room } from "@/lib/types";
+import { parseExcelToDatabase } from "@/lib/excel-parser";
+import { mergeDatabase } from "@/lib/merge-database";
 
 const API_URL =
   "https://script.googleusercontent.com/macros/echo?user_content_key=AY5xjrTH8wCPy1xybz_TfQgVBSrZZzIsy4TkeW7z1aOV4br3YSx-y1486MNZuTNJC0Qc80pJ4J19gc5j_uhu_6n8ryzWbyOZFch5wjweoCheuC9bYeoVZlDGL2eUcjB7uX4RQ4QfVU1-LOFYpXyNJ7kHPqc9dvNBjmECiONIOVajFQ47TNtCJ10M5mE41mFlZSj2Xayy-hP_tcsLVWu8GQUABFx9Pfr9vVHwpzEh_O6eyPrAJ6Xxk-BbtscoKhMR3WwDJMfI65C_XNI_Zl_v3GNIx-oJil4DKhjouFEDW5Gm&lib=MUsyy__Y2hRmqp7KqBS8pDEVbNHHkxU_r";
@@ -188,7 +190,7 @@ export function useAssetStore() {
   const createRoom = useCallback(
     (roomName: string, rows = 6, cols = 8) => {
       const existing = db.rooms[roomName];
-      const room: Room = existing || { rows, cols, assets: {}, entranceCellId: null };
+      const room: Room = existing || { rows, cols, assets: {}, entranceCellId: "0-0" };
       const newDb = {
         ...db,
         rooms: { ...db.rooms, [roomName]: room },
@@ -275,6 +277,29 @@ export function useAssetStore() {
     [db, saveLocal]
   );
 
+  const mergeFromExcel = useCallback(
+    async (file: File): Promise<{ addedRooms: number; addedAssets: number }> => {
+      const buffer = await file.arrayBuffer();
+      const xlsxModule = await import("xlsx");
+      const xlsx = (xlsxModule as { default?: typeof xlsxModule }).default ?? xlsxModule;
+      const parsed = parseExcelToDatabase(xlsx, buffer);
+      let addedRooms = 0;
+      let addedAssets = 0;
+      for (const name of Object.keys(parsed.rooms)) {
+        if (!db.rooms[name]) addedRooms++;
+        const existing = db.rooms[name];
+        for (const [cid, asset] of Object.entries(parsed.rooms[name].assets)) {
+          if (!existing?.assets[cid]) addedAssets++;
+        }
+      }
+      const merged = mergeDatabase(db, parsed);
+      setDb(merged);
+      saveLocal(merged);
+      return { addedRooms, addedAssets };
+    },
+    [db, saveLocal]
+  );
+
   return {
     db,
     isLoaded,
@@ -289,5 +314,6 @@ export function useAssetStore() {
     setInventory,
     createRoom,
     setRoomEntrance,
+    mergeFromExcel,
   };
 }

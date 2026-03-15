@@ -6,18 +6,18 @@ import type { Room } from "@/lib/types";
 
 interface AssetGridProps {
   room: Room;
+  pendingAddCellId: string | null;
   onCellClick: (cellId: string) => void;
   onMoveAsset: (fromCellId: string, toCellId: string) => void;
-  isSelectingEntrance?: boolean;
-  onSelectEntrance?: (cellId: string) => void;
+  onMoveEntrance: (toCellId: string) => void;
 }
 
 export function AssetGrid({
   room,
+  pendingAddCellId,
   onCellClick,
   onMoveAsset,
-  isSelectingEntrance,
-  onSelectEntrance,
+  onMoveEntrance,
 }: AssetGridProps) {
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
@@ -39,26 +39,15 @@ export function AssetGrid({
     setDropTarget(null);
   }, []);
 
-  const handleDrop = useCallback(
-    (cellId: string) => {
-      if (dragSource && dragSource !== cellId) {
-        onMoveAsset(dragSource, cellId);
-        setDragSource(null);
-        setDropTarget(null);
-      }
-    },
-    [dragSource, onMoveAsset]
-  );
-
   const handlePress = useCallback(
     (cellId: string) => {
-      if (isSelectingEntrance && onSelectEntrance) {
-        onSelectEntrance(cellId);
-        return;
-      }
       if (dragSource) {
         if (dragSource !== cellId) {
-          onMoveAsset(dragSource, cellId);
+          if (room.entranceCellId === dragSource) {
+            onMoveEntrance(cellId);
+          } else {
+            onMoveAsset(dragSource, cellId);
+          }
         }
         setDragSource(null);
         setDropTarget(null);
@@ -66,7 +55,7 @@ export function AssetGrid({
         onCellClick(cellId);
       }
     },
-    [dragSource, onCellClick, onMoveAsset, isSelectingEntrance, onSelectEntrance]
+    [dragSource, room.entranceCellId, onCellClick, onMoveAsset, onMoveEntrance]
   );
 
   const cells = [];
@@ -82,9 +71,9 @@ export function AssetGrid({
           isDragging={dragSource === cellId}
           isDropTarget={dropTarget === cellId}
           isEntrance={room.entranceCellId === cellId}
+          isPendingAdd={pendingAddCellId === cellId}
           onPress={() => handlePress(cellId)}
           onLongPress={() => handleLongPress(cellId)}
-          onDrop={() => handleDrop(cellId)}
           onDragEnter={() => handleDragEnter(cellId)}
           onDragLeave={handleDragLeave}
         />

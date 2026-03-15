@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Upload } from "lucide-react";
 
 interface LobbyProps {
   rooms: string[];
   onEnterRoom: (roomName: string) => void;
   onCreateRoom: (roomName: string) => void;
   onOpenReport: () => void;
+  onImportExcel: (file: File) => Promise<{ addedRooms: number; addedAssets: number }>;
 }
 
-export function Lobby({ rooms, onEnterRoom, onCreateRoom, onOpenReport }: LobbyProps) {
+export function Lobby({ rooms, onEnterRoom, onCreateRoom, onOpenReport, onImportExcel }: LobbyProps) {
   const [newRoomName, setNewRoomName] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCreate = () => {
     const trimmed = newRoomName.trim();
@@ -21,11 +26,33 @@ export function Lobby({ rooms, onEnterRoom, onCreateRoom, onOpenReport }: LobbyP
     setNewRoomName("");
   };
 
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !file.name.match(/\.(xlsx|xls)$/i)) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const { addedRooms, addedAssets } = await onImportExcel(file);
+      setImportResult(`נוסף: ${addedRooms} חדרים, ${addedAssets} עמדות`);
+    } catch {
+      setImportResult("שגיאה בייבוא");
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-8 p-5">
       <h1 className="text-4xl font-black text-foreground">
         AssetMap <span className="text-[var(--primary)]">Latrun</span>
       </h1>
+      <nav className="w-full max-w-4xl text-right">
+        <div className="text-sm text-muted-foreground font-medium mb-1">מאנ\"ח</div>
+        <div className="text-lg font-bold text-[var(--primary)]">חדרים</div>
+      </nav>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl">
         {rooms.map((room) => (
           <button
@@ -59,6 +86,25 @@ export function Lobby({ rooms, onEnterRoom, onCreateRoom, onOpenReport }: LobbyP
         >
           דוח ציוד (טבלה + CSV)
         </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls"
+          className="hidden"
+          onChange={handleFileChange}
+        />
+        <Button
+          variant="outline"
+          onClick={handleImportClick}
+          disabled={importing}
+          className="w-full bg-secondary border-[var(--glass-border)] text-foreground gap-2"
+        >
+          <Upload className="w-4 h-4" />
+          {importing ? "מייבא..." : "ייבוא מאקסל (מוסיף רק מה שחסר)"}
+        </Button>
+        {importResult && (
+          <p className="text-sm text-[var(--primary)]">{importResult}</p>
+        )}
       </div>
     </div>
   );

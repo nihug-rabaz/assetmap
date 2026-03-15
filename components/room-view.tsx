@@ -6,7 +6,7 @@ import { AssetGrid } from "./asset-grid";
 import { SettingsModal } from "./settings-modal";
 import { AssetModal } from "./asset-modal";
 import type { Asset, Database, Room } from "@/lib/types";
-import { ArrowRight, Settings, RefreshCw } from "lucide-react";
+import { ArrowRight, Settings } from "lucide-react";
 
 interface RoomViewProps {
   roomName: string;
@@ -36,13 +36,42 @@ export function RoomView({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [assetModalOpen, setAssetModalOpen] = useState(false);
   const [selectedCellId, setSelectedCellId] = useState<string | null>(null);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
-  const [selectingEntrance, setSelectingEntrance] = useState(false);
+  const [pendingAddCellId, setPendingAddCellId] = useState<string | null>(null);
+  const [moveSourceCellId, setMoveSourceCellId] = useState<string | null>(null);
 
-  const handleCellClick = useCallback((cellId: string) => {
-    setSelectedCellId(cellId);
-    setAssetModalOpen(true);
-  }, []);
+  const handleCellClick = useCallback(
+    (cellId: string) => {
+      const hasAsset = !!room.assets[cellId];
+      const isEntrance = room.entranceCellId === cellId;
+      if (moveSourceCellId !== null) {
+        if (cellId === moveSourceCellId) {
+          setMoveSourceCellId(null);
+          return;
+        }
+        const wasEntrance = room.entranceCellId === moveSourceCellId;
+        if (wasEntrance) {
+          onSetEntrance(cellId);
+        } else {
+          onMoveAsset(moveSourceCellId, cellId);
+        }
+        setMoveSourceCellId(null);
+        return;
+      }
+      if (hasAsset || isEntrance) {
+        setMoveSourceCellId(cellId);
+        setPendingAddCellId(null);
+        return;
+      }
+      if (cellId === pendingAddCellId) {
+        setSelectedCellId(cellId);
+        setAssetModalOpen(true);
+        setPendingAddCellId(null);
+      } else {
+        setPendingAddCellId(cellId);
+      }
+    },
+    [room.assets, room.entranceCellId, moveSourceCellId, pendingAddCellId, onSetEntrance, onMoveAsset]
+  );
 
   const handleSaveAsset = useCallback(
     (asset: Asset) => {
@@ -67,15 +96,6 @@ export function RoomView({
     [onUpdateDimensions, onUpdateInventory]
   );
 
-  const handleSync = useCallback(() => {
-    setSyncStatus("syncing");
-    // Simulate sync
-    setTimeout(() => {
-      setSyncStatus("success");
-      setTimeout(() => setSyncStatus("idle"), 2000);
-    }, 1000);
-  }, []);
-
   const selectedAsset = selectedCellId ? room.assets[selectedCellId] : undefined;
 
   return (
@@ -95,31 +115,6 @@ export function RoomView({
 
         <div className="flex gap-2">
           <Button
-            onClick={() => setSelectingEntrance((prev) => !prev)}
-            variant={selectingEntrance ? "default" : "outline"}
-            className="bg-secondary border-[var(--glass-border)] text-foreground gap-2"
-          >
-            {selectingEntrance ? "סמן ריבוע כניסה" : "בחירת כניסה"}
-          </Button>
-          <Button
-            onClick={handleSync}
-            variant="outline"
-            className="bg-secondary border-[var(--glass-border)] text-foreground gap-2"
-          >
-            {syncStatus === "syncing" ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : syncStatus === "success" ? (
-              "✅"
-            ) : syncStatus === "error" ? (
-              "❌"
-            ) : (
-              <>
-                סנכרון
-                <RefreshCw className="w-4 h-4" />
-              </>
-            )}
-          </Button>
-          <Button
             onClick={() => setSettingsOpen(true)}
             variant="outline"
             size="icon"
@@ -133,13 +128,10 @@ export function RoomView({
       {/* Grid */}
       <AssetGrid
         room={room}
+        pendingAddCellId={pendingAddCellId}
         onCellClick={handleCellClick}
         onMoveAsset={onMoveAsset}
-        isSelectingEntrance={selectingEntrance}
-        onSelectEntrance={(cellId) => {
-          onSetEntrance(cellId);
-          setSelectingEntrance(false);
-        }}
+        onMoveEntrance={onSetEntrance}
       />
 
       {/* Modals */}

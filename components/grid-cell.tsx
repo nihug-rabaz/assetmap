@@ -9,9 +9,9 @@ interface GridCellProps {
   isDragging: boolean;
   isDropTarget: boolean;
   isEntrance: boolean;
+  isPendingAdd: boolean;
   onPress: () => void;
   onLongPress: () => void;
-  onDrop: () => void;
   onDragEnter: () => void;
   onDragLeave: () => void;
 }
@@ -22,9 +22,9 @@ export function GridCell({
   isDragging,
   isDropTarget,
   isEntrance,
+  isPendingAdd,
   onPress,
   onLongPress,
-  onDrop,
   onDragEnter,
   onDragLeave,
 }: GridCellProps) {
@@ -33,7 +33,7 @@ export function GridCell({
 
   const handleStart = () => {
     isLongPress = false;
-    if (asset) {
+    if (asset || isEntrance) {
       pressTimer = setTimeout(() => {
         isLongPress = true;
         onLongPress();
@@ -73,10 +73,11 @@ export function GridCell({
       onTouchEnd={handleEnd}
       onTouchCancel={handleCancel}
       onMouseEnter={onDragEnter}
-      onClick={onDrop}
       onDragLeave={onDragLeave}
     >
-      {isEntrance ? (
+      {isPendingAdd ? (
+        <span className="text-3xl font-light text-[var(--primary)] pointer-events-none">+</span>
+      ) : isEntrance ? (
         <>
           <span className="text-2xl mb-1 pointer-events-none">🚪</span>
           <span className="text-[10px] font-extrabold text-[var(--primary)] text-center pointer-events-none px-1 truncate max-w-full">

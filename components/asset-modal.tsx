@@ -85,7 +85,7 @@ export function AssetModal({
   const { showPcSku, showMonSku, pcLabel, pcOptions, monOptions } = useMemo(() => {
     let showPc = false;
     let showMon = false;
-    let label = 'מק"ט';
+    let label = "מק\"ט";
     let pcOpts: string[] = [];
     let monOpts: string[] = [];
 
@@ -93,13 +93,13 @@ export function AssetModal({
       case "STATION":
         showPc = true;
         showMon = true;
-        label = 'מק"ט PC';
+        label = "מק\"ט PC";
         pcOpts = inventory.PC || [];
         monOpts = inventory.MONITOR || [];
         break;
       case "PC":
         showPc = true;
-        label = 'מק"ט PC';
+        label = "מק\"ט PC";
         pcOpts = inventory.PC || [];
         break;
       case "MONITOR":
@@ -112,17 +112,17 @@ export function AssetModal({
         break;
       case "PRINTER":
         showPc = true;
-        label = 'מק"ט PRINTER';
+        label = "מק\"ט PRINTER";
         pcOpts = inventory.PRINTER || [];
         break;
       case "UC":
         showPc = true;
-        label = 'מק"ט UC';
+        label = "מק\"ט UC";
         pcOpts = inventory.UC || [];
         break;
       case "SWITCH":
         showPc = true;
-        label = 'מק"ט SWITCH';
+        label = "מק\"ט SWITCH";
         pcOpts = inventory.SWITCH || [];
         break;
     }
@@ -177,7 +177,7 @@ export function AssetModal({
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder={'לדוגמא: קמב"ץ'}
+          placeholder={"לדוגמא: קמב\"ץ"}
           className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
         />
 
@@ -201,7 +201,7 @@ export function AssetModal({
             <div className="flex gap-2 mt-2">
               <Select value={sku || undefined} onValueChange={setSku}>
                 <SelectTrigger className="flex-1 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
-                  <SelectValue placeholder={'בחר מק"ט'} />
+                  <SelectValue placeholder={"בחר מק\"ט"} />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-[var(--glass-border)]">
                   {pcOptions
@@ -233,11 +233,11 @@ export function AssetModal({
 
         {showMonSku && (
           <>
-            <Label className="text-muted-foreground text-sm mt-4 block">{'מק"ט מסך'}</Label>
+            <Label className="text-muted-foreground text-sm mt-4 block">{"מק\"ט מסך"}</Label>
             <div className="flex gap-2 mt-2">
               <Select value={monSku || undefined} onValueChange={setMonSku}>
                 <SelectTrigger className="flex-1 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground">
-                  <SelectValue placeholder={'בחר מק"ט מסך'} />
+                  <SelectValue placeholder={"בחר מק\"ט מסך"} />
                 </SelectTrigger>
                 <SelectContent className="bg-card border-[var(--glass-border)]">
                   {monOptions
@@ -359,7 +359,7 @@ export function AssetModal({
               onClick={handleDelete}
               className="w-full bg-[var(--danger)] text-white font-extrabold hover:bg-[var(--danger)]/90"
             >
-              {'מחק עמדה 🗑️'}
+              {"מחק עמדה 🗑️"}
             </Button>
           </div>
         )}

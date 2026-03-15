@@ -370,7 +370,16 @@ export function DeviceReport({ db, onBack }: DeviceReportProps) {
                 <TableCell>{row.room}</TableCell>
                 <TableCell>{row.cell}</TableCell>
                 <TableCell>{row.name}</TableCell>
-                <TableCell>{row.type}</TableCell>
+                <TableCell className="flex items-center gap-2">
+                  {row.type === "ENTRANCE" ? (
+                    <>
+                      <img src="/entrance-icon.png" alt="" className="w-6 h-6 object-contain" />
+                      <span>{row.name}</span>
+                    </>
+                  ) : (
+                    row.type
+                  )}
+                </TableCell>
                 <TableCell>{row.sku}</TableCell>
                 <TableCell>{row.monSku}</TableCell>
               </TableRow>

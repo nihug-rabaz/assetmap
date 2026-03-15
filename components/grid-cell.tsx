@@ -115,7 +115,7 @@ export function GridCell({
         <span className="text-3xl font-light text-[var(--primary)] pointer-events-none">+</span>
       ) : isEntrance ? (
         <>
-          <span className="text-2xl mb-1 pointer-events-none">🚪</span>
+          <img src="/entrance-icon.png" alt="" className="w-10 h-10 sm:w-11 sm:h-11 mb-1 object-contain pointer-events-none" />
           <span className="text-[10px] font-extrabold text-[var(--primary)] text-center pointer-events-none px-1 truncate max-w-full">
             כניסה
           </span>

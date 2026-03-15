@@ -232,6 +232,11 @@ export function useAssetStore() {
 
   const saveLocal = useCallback((newDb: Database) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(newDb));
+    fetch("/api/rooms/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ rooms: newDb.rooms }),
+    }).catch(() => {});
   }, []);
 
   const getRoom = useCallback(

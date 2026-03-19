@@ -21,6 +21,7 @@ export function AssetGrid({
 }: AssetGridProps) {
   const [dragSource, setDragSource] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [scale, setScale] = useState(1);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const handleLongPress = useCallback((cellId: string) => {
@@ -38,6 +39,27 @@ export function AssetGrid({
     },
     [dragSource]
   );
+
+  useEffect(() => {
+    const updateScale = () => {
+      if (typeof window === "undefined") return;
+      const vw = window.innerWidth || 0;
+      if (!vw) return;
+      const baseCell = 56;
+      const gap = 4;
+      const gridWidth = room.cols * baseCell + (room.cols - 1) * gap;
+      const target = vw - 24;
+      if (gridWidth <= 0 || target <= 0) {
+        setScale(1);
+        return;
+      }
+      const next = Math.min(1, target / gridWidth);
+      setScale(next);
+    };
+    updateScale();
+    window.addEventListener("resize", updateScale);
+    return () => window.removeEventListener("resize", updateScale);
+  }, [room.cols]);
 
   useEffect(() => {
     if (!dragSource || !gridRef.current) return;
@@ -103,19 +125,22 @@ export function AssetGrid({
   }
 
   return (
-    <div
-      ref={gridRef}
-      className="flex-1 overflow-auto px-2 py-3 sm:px-4 sm:py-6 md:p-8"
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${room.cols}, 56px)`,
-        gap: 4,
-        justifyContent: "center",
-        alignContent: "start",
-      }}
-      onTouchMove={dragSource ? handleTouchMove : undefined}
-    >
-      {cells}
+    <div className="flex-1 overflow-auto px-1 py-2 sm:px-4 sm:py-6 md:p-8 flex items-start justify-center">
+      <div
+        ref={gridRef}
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${room.cols}, 56px)`,
+          gap: 4,
+          justifyContent: "center",
+          alignContent: "start",
+          transform: `scale(${scale})`,
+          transformOrigin: "top center",
+        }}
+        onTouchMove={dragSource ? handleTouchMove : undefined}
+      >
+        {cells}
+      </div>
     </div>
   );
 }

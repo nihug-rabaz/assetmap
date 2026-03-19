@@ -1,12 +1,10 @@
-const CACHE_NAME = "assetmap-cache-v1";
-const ASSETS = ["/", "/icon.svg"];
+// Minimal service worker: no HTTP caching, always use network.
+// Also clears any old caches from previous versions.
+
+const CACHE_PREFIX = "assetmap-cache-legacy";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -14,27 +12,14 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
+          if (key.startsWith(CACHE_PREFIX)) {
             return caches.delete(key);
           }
         })
       )
-    )
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
-
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      });
-    })
-  );
-});
+// No fetch handler → browser will always go to network (with normal HTTP caching headers).
 

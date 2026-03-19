@@ -14,6 +14,7 @@ interface RoomViewProps {
   room: Room;
   inventory: Database["inventory"];
   onBack: () => void;
+  onDeleteRoom: () => void;
   onSetAsset: (cellId: string, asset: Asset) => void;
   onDeleteAsset: (cellId: string) => void;
   onMoveAsset: (fromCellId: string, toCellId: string) => void;
@@ -27,6 +28,7 @@ export function RoomView({
   room,
   inventory,
   onBack,
+  onDeleteRoom,
   onSetAsset,
   onDeleteAsset,
   onMoveAsset,
@@ -116,14 +118,25 @@ export function RoomView({
     <div className="flex flex-col h-screen">
       {/* Top Bar */}
       <div className="h-16 bg-card/95 flex items-center justify-between px-5 border-b border-[var(--glass-border)] backdrop-blur-lg z-50">
-        <Button
-          onClick={onBack}
-          variant="outline"
-          className="bg-secondary border-[var(--glass-border)] text-foreground gap-2"
-        >
-          <ArrowRight className="w-4 h-4" />
-          חזרה
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={onBack}
+            variant="outline"
+            className="bg-secondary border-[var(--glass-border)] text-foreground gap-2"
+          >
+            <ArrowRight className="w-4 h-4" />
+            חזרה
+          </Button>
+          <Button
+            onClick={() => {
+              if (confirm("למחוק את החדר והעמדות שבו?")) onDeleteRoom();
+            }}
+            variant="outline"
+            className="bg-[var(--danger)]/10 border-[var(--danger)] text-[var(--danger)] text-xs px-3"
+          >
+            מחיקת חדר
+          </Button>
+        </div>
 
         <h3 className="text-lg font-bold text-[var(--primary)]">{normalizeGershayim(roomName)}</h3>
 

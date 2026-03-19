@@ -139,6 +139,19 @@ export function useAssetStore() {
     [db]
   );
 
+  const deleteRoom = useCallback(
+    (roomName: string) => {
+      const { [roomName]: _, ...rest } = db.rooms;
+      const newDb = {
+        ...db,
+        rooms: rest,
+      };
+      setDb(newDb);
+      saveLocal(newDb);
+    },
+    [db]
+  );
+
   const createRoom = useCallback(
     (name: string, rowsCount = 6, colsCount = 8) => {
       const roomName = normalizeGershayim(name);
@@ -262,6 +275,7 @@ export function useAssetStore() {
     error,
     getRoom,
     setRoom,
+    deleteRoom,
     setAsset,
     deleteAsset,
     moveAsset,

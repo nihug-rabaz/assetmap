@@ -16,6 +16,7 @@ export default function Home() {
     isLoading,
     error,
     getRoom,
+    deleteRoom,
     setAsset,
     deleteAsset,
     moveAsset,
@@ -41,6 +42,13 @@ export default function Home() {
   const handleBack = useCallback(() => {
     setCurrentRoom(null);
   }, []);
+
+  const handleDeleteCurrentRoom = useCallback(() => {
+    if (!currentRoom) return;
+    if (!confirm("למחוק את החדר והעמדות שבו?")) return;
+    deleteRoom(currentRoom);
+    setCurrentRoom(null);
+  }, [currentRoom, deleteRoom]);
 
   const handleSetAsset = useCallback(
     (cellId: string, asset: Asset) => {
@@ -126,6 +134,7 @@ export default function Home() {
       room={room}
       inventory={db.inventory}
       onBack={handleBack}
+      onDeleteRoom={handleDeleteCurrentRoom}
       onSetAsset={handleSetAsset}
       onDeleteAsset={handleDeleteAsset}
       onMoveAsset={handleMoveAsset}

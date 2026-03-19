@@ -87,7 +87,7 @@ export function GridCell({
     <div
       data-cell-id={cellId}
       className={cn(
-        "w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] rounded-xl flex flex-col items-center justify-center relative transition-all duration-100 select-none",
+        "w-[56px] h-[56px] sm:w-[72px] sm:h-[72px] md:w-[80px] md:h-[80px] rounded-xl flex flex-col items-center justify-center relative transition-all duration-100 select-none",
         (asset || isEntrance) ? (isDragging ? "cursor-grabbing" : "cursor-grab") : "cursor-pointer",
         "bg-white/[0.03] border border-white/[0.05]",
         (asset || isEntrance) && "bg-[#1c2135] border-[var(--glass-border)] shadow-lg",

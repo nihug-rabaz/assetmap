@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { AssetGrid } from "./asset-grid";
 import { SettingsModal } from "./settings-modal";
 import { AssetModal } from "./asset-modal";
-import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { Asset, Database, Room } from "@/lib/types";
 import { normalizeGershayim } from "@/lib/utils";
 import { ArrowRight, Minus, Settings } from "lucide-react";
@@ -43,7 +42,6 @@ export function RoomView({
   const [pendingAddCellId, setPendingAddCellId] = useState<string | null>(null);
   const [moveSourceCellId, setMoveSourceCellId] = useState<string | null>(null);
   const [selectingEntrance, setSelectingEntrance] = useState(false);
-  const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false);
 
   const handleCellClick = useCallback(
     (cellId: string) => {
@@ -119,8 +117,8 @@ export function RoomView({
   return (
     <div className="flex flex-col h-screen">
       {/* Top Bar */}
-      <div className="h-auto bg-card/95 flex flex-col gap-2 px-3 py-2 sm:flex-row sm:h-16 sm:px-5 sm:py-0 sm:items-center sm:justify-between border-b border-[var(--glass-border)] backdrop-blur-lg z-50">
-        <div className="flex items-center gap-2">
+      <div className="h-14 sm:h-16 bg-card/95 flex items-center justify-between px-2 sm:px-5 border-b border-[var(--glass-border)] backdrop-blur-lg z-50 gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             onClick={onBack}
             variant="outline"
@@ -129,20 +127,13 @@ export function RoomView({
             <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
             חזרה
           </Button>
-          <Button
-            onClick={() => setDeleteRoomConfirmOpen(true)}
-            variant="outline"
-            className="bg-[var(--danger)]/10 border-[var(--danger)] text-[var(--danger)] text-[10px] sm:text-xs px-2 sm:px-3"
-          >
-            מחיקת חדר
-          </Button>
         </div>
 
-        <h3 className="text-sm sm:text-lg font-bold text-[var(--primary)] text-center sm:text-right truncate px-1">
+        <h3 className="flex-1 text-sm sm:text-lg font-bold text-[var(--primary)] text-center truncate px-1">
           {normalizeGershayim(roomName)}
         </h3>
 
-        <div className="flex gap-2 justify-end">
+        <div className="flex items-center gap-1 sm:gap-2 justify-end">
           <Button
             onClick={() => setSelectingEntrance((p) => !p)}
             variant={selectingEntrance ? "default" : "outline"}
@@ -189,6 +180,7 @@ export function RoomView({
         room={room}
         inventory={inventory}
         onSave={handleSettingsSave}
+        onDeleteRoom={onDeleteRoom}
       />
 
       <AssetModal
@@ -212,18 +204,6 @@ export function RoomView({
               }
             : undefined
         }
-      />
-      <ConfirmDialog
-        isOpen={deleteRoomConfirmOpen}
-        title="מחיקת חדר"
-        description="למחוק את החדר והעמדות שבו? הפעולה לא ניתנת לשחזור."
-        confirmText="מחק חדר"
-        cancelText="ביטול"
-        onCancel={() => setDeleteRoomConfirmOpen(false)}
-        onConfirm={() => {
-          setDeleteRoomConfirmOpen(false);
-          onDeleteRoom();
-        }}
       />
     </div>
   );

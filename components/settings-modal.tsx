@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Database, Room } from "@/lib/types";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ interface SettingsModalProps {
   room: Room;
   inventory: Database["inventory"];
   onSave: (rows: number, cols: number, inventoryType: keyof Database["inventory"], items: string[]) => void;
+  onDeleteRoom: () => void;
 }
 
 type InventoryType = keyof Database["inventory"];
@@ -33,11 +35,12 @@ const INVENTORY_TYPES: { value: InventoryType; label: string }[] = [
   { value: "SWITCH", label: "SWITCH (סוויצ'ים)" },
 ];
 
-export function SettingsModal({ isOpen, onClose, room, inventory, onSave }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, room, inventory, onSave, onDeleteRoom }: SettingsModalProps) {
   const [rows, setRows] = useState(room.rows);
   const [cols, setCols] = useState(room.cols);
   const [inventoryType, setInventoryType] = useState<InventoryType>("PC");
   const [inventoryText, setInventoryText] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     setRows(room.rows);
@@ -113,13 +116,36 @@ export function SettingsModal({ isOpen, onClose, room, inventory, onSave }: Sett
           className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground resize-none"
         />
 
-        <Button
-          onClick={handleSave}
-          className="w-full mt-4 bg-[var(--primary)] text-black font-extrabold hover:bg-[var(--primary)]/90"
-        >
-          שמור הגדרות
-        </Button>
+        <div className="mt-4 flex flex-col gap-2">
+          <Button
+            onClick={handleSave}
+            className="w-full bg-[var(--primary)] text-black font-extrabold hover:bg-[var(--primary)]/90"
+          >
+            שמור הגדרות
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger)]/10"
+            onClick={() => setDeleteConfirmOpen(true)}
+          >
+            מחיקת חדר
+          </Button>
+        </div>
       </div>
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        title="מחיקת חדר"
+        description="למחוק את החדר והעמדות שבו? הפעולה לא ניתנת לשחזור."
+        confirmText="מחק חדר"
+        cancelText="ביטול"
+        onCancel={() => setDeleteConfirmOpen(false)}
+        onConfirm={() => {
+          setDeleteConfirmOpen(false);
+          onClose();
+          onDeleteRoom();
+        }}
+      />
     </>
   );
 }

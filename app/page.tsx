@@ -45,7 +45,6 @@ export default function Home() {
 
   const handleDeleteCurrentRoom = useCallback(() => {
     if (!currentRoom) return;
-    if (!confirm("למחוק את החדר והעמדות שבו?")) return;
     deleteRoom(currentRoom);
     setCurrentRoom(null);
   }, [currentRoom, deleteRoom]);

@@ -14,6 +14,7 @@ import {
 import type { Asset, AssetType, Database } from "@/lib/types";
 import { ASSET_TYPES } from "@/lib/types";
 import { BarcodeScanner } from "@/components/barcode-scanner";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 
 interface AssetModalProps {
   isOpen: boolean;
@@ -52,6 +53,8 @@ export function AssetModal({
   const [checkStatus, setCheckStatus] = useState<"OK" | "NOT_OK">("OK");
   const [checkNotes, setCheckNotes] = useState("");
   const [checkBy, setCheckBy] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (asset) {
@@ -145,9 +148,10 @@ export function AssetModal({
 
   const handleSave = () => {
     if (!name.trim()) {
-      alert("חובה להזין שם עמדה");
+      setFormError("חובה להזין שם עמדה");
       return;
     }
+    setFormError(null);
     onSave({
       name: name.trim(),
       type,
@@ -158,10 +162,7 @@ export function AssetModal({
   };
 
   const handleDelete = () => {
-    if (confirm("למחוק את העמדה?")) {
-      onDelete();
-      onClose();
-    }
+    setShowDeleteConfirm(true);
   };
 
   if (!isOpen) return null;
@@ -182,6 +183,7 @@ export function AssetModal({
           placeholder={"לדוגמא: קמב\"ץ"}
           className="mt-2 bg-[var(--bg-dark)] border-[var(--glass-border)] text-foreground"
         />
+        {formError && <div className="mt-2 text-xs text-[var(--danger)]">{formError}</div>}
 
         <Label className="text-muted-foreground text-sm mt-4 block">סוג ציוד</Label>
         <Select value={type} onValueChange={(v) => setType(v as AssetType)}>
@@ -406,6 +408,19 @@ export function AssetModal({
           onClose={() => setScanTarget(null)}
         />
       )}
+      <ConfirmDialog
+        isOpen={showDeleteConfirm}
+        title="מחיקת תא"
+        description="למחוק את התא? הפעולה לא ניתנת לשחזור."
+        confirmText="מחק"
+        cancelText="ביטול"
+        onCancel={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          onDelete();
+          onClose();
+        }}
+      />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AssetGrid } from "./asset-grid";
 import { SettingsModal } from "./settings-modal";
 import { AssetModal } from "./asset-modal";
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import type { Asset, Database, Room } from "@/lib/types";
 import { normalizeGershayim } from "@/lib/utils";
 import { ArrowRight, Minus, Settings } from "lucide-react";
@@ -42,6 +43,7 @@ export function RoomView({
   const [pendingAddCellId, setPendingAddCellId] = useState<string | null>(null);
   const [moveSourceCellId, setMoveSourceCellId] = useState<string | null>(null);
   const [selectingEntrance, setSelectingEntrance] = useState(false);
+  const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false);
 
   const handleCellClick = useCallback(
     (cellId: string) => {
@@ -128,9 +130,7 @@ export function RoomView({
             חזרה
           </Button>
           <Button
-            onClick={() => {
-              if (confirm("למחוק את החדר והעמדות שבו?")) onDeleteRoom();
-            }}
+            onClick={() => setDeleteRoomConfirmOpen(true)}
             variant="outline"
             className="bg-[var(--danger)]/10 border-[var(--danger)] text-[var(--danger)] text-xs px-3"
           >
@@ -210,6 +210,18 @@ export function RoomView({
               }
             : undefined
         }
+      />
+      <ConfirmDialog
+        isOpen={deleteRoomConfirmOpen}
+        title="מחיקת חדר"
+        description="למחוק את החדר והעמדות שבו? הפעולה לא ניתנת לשחזור."
+        confirmText="מחק חדר"
+        cancelText="ביטול"
+        onCancel={() => setDeleteRoomConfirmOpen(false)}
+        onConfirm={() => {
+          setDeleteRoomConfirmOpen(false);
+          onDeleteRoom();
+        }}
       />
     </div>
   );
